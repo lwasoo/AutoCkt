@@ -1,6 +1,9 @@
 """
 A new ckt environment based on a new structure of MDP
 """
+from Log import log
+from func_decorator import debug_log
+
 import gym
 from gym import spaces
 
@@ -34,12 +37,14 @@ class OrderedDictYAMLLoader(yaml.Loader):
         self.add_constructor(u'tag:yaml.org,2002:map', type(self).construct_yaml_map)
         self.add_constructor(u'tag:yaml.org,2002:omap', type(self).construct_yaml_map)
 
+    @debug_log
     def construct_yaml_map(self, node):
         data = OrderedDict()
         yield data
         value = self.construct_mapping(node)
         data.update(value)
 
+    @debug_log
     def construct_mapping(self, node, deep=False):
         if isinstance(node, yaml.MappingNode):
             self.flatten_mapping(node)
@@ -125,6 +130,7 @@ class TwoStageAmp(gym.Env):
         #objective number (used for validation)
         self.obj_idx = 0
 
+    @debug_log
     def reset(self):
         #if multi-goal is selected, every time reset occurs, it will select a different design spec as objective
         if self.generalize == True:
@@ -162,7 +168,8 @@ class TwoStageAmp(gym.Env):
         #observation is a combination of current specs distance from ideal, ideal spec, and current param vals
         self.ob = np.concatenate([cur_spec_norm, self.specs_ideal_norm, self.cur_params_idx])
         return self.ob
- 
+
+    @debug_log
     def step(self, action):
         """
         :param action: is vector with elements between 0 and 1 mapped to the index of the corresponding parameter
@@ -184,12 +191,12 @@ class TwoStageAmp(gym.Env):
         #incentivize reaching goal state
         if (reward >= 10):
             done = True
-            print('-'*10)
-            print('params = ', self.cur_params_idx)
-            print('specs:', self.cur_specs)
-            print('ideal specs:', self.specs_ideal)
-            print('re:', reward)
-            print('-'*10)
+            log.info('-'*10)
+            log.info('params = {}'.format(self.cur_params_idx))
+            log.info('specs: {}'.format(self.cur_specs))
+            log.info('ideal specs: {}'.format(self.specs_ideal))
+            log.info('re: {}'.format(reward))
+            log.info('-'*10)
 
         self.ob = np.concatenate([cur_spec_norm, self.specs_ideal_norm, self.cur_params_idx])
         self.env_steps = self.env_steps + 1
@@ -199,11 +206,13 @@ class TwoStageAmp(gym.Env):
         #print(reward)
         return self.ob, reward, done, {}
 
+    @debug_log
     def lookup(self, spec, goal_spec):
         goal_spec = [float(e) for e in goal_spec]
         norm_spec = (spec-goal_spec)/(goal_spec+spec)
         return norm_spec
-    
+
+    @debug_log
     def reward(self, spec, goal_spec):
         '''
         Reward: doesn't penalize for overshooting spec, is negative
@@ -222,6 +231,7 @@ class TwoStageAmp(gym.Env):
 
         return reward if reward < -0.02 else 10
 
+    @debug_log
     def update(self, params_idx):
         """
 

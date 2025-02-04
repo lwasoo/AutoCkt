@@ -1,8 +1,11 @@
+from Log import log
+from func_decorator import debug_log
 import os
 import re
 
+@debug_log
 def update_file(fname, path_to_model):
-    print("changing "+ fname)
+    log.info("changing {}".format(fname))
     with open(fname, 'r') as f:
         lines = f.readlines()
 
