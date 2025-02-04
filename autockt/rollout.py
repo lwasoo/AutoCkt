@@ -4,6 +4,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from Log import log
+from func_decorator import debug_log
+
 import argparse
 import json
 import os
@@ -17,7 +20,7 @@ from ray.rllib.agents.registry import get_agent_class
 from ray.tune.registry import register_env
 
 #from bag_deep_ckt.autockt.envs.bag_opamp_discrete import TwoStageAmp
-from envs.spectre_vanilla_opamp import TwoStageAmp
+from envs.ngspice_vanilla_opamp import TwoStageAmp
 
 EXAMPLE_USAGE = """
 Example Usage via RLlib CLI:
@@ -34,6 +37,7 @@ Example Usage via executable:
 # register_env("pa_cartpole", lambda _: ParametricActionCartpole(10))
 register_env("opamp-v0", lambda config:TwoStageAmp(config))
 
+@debug_log
 def create_parser(parser_creator=None):
     parser_creator = parser_creator or argparse.ArgumentParser
     parser = parser_creator(
@@ -81,10 +85,11 @@ def create_parser(parser_creator=None):
         help="Length of each trajectory")
     return parser
 
+@debug_log
 def run(args, parser):
     config = args.config
     if not config:
-        # Load configuration from file
+        # Load configuration from file从params
         config_dir = os.path.dirname(args.checkpoint)
         config_path = os.path.join(config_dir, "params.json")
         if not os.path.exists(config_path):
@@ -111,10 +116,12 @@ def run(args, parser):
     num_steps = int(args.steps)
     rollout(agent, args.env, num_steps, args.out, args.no_render)
 
+@debug_log
 def unlookup(norm_spec, goal_spec):
     spec = -1*np.multiply((norm_spec+1), goal_spec)/(norm_spec-1) 
     return spec
 
+@debug_log
 def rollout(agent, env_name, num_steps, out="assdf", no_render=True):
     if hasattr(agent, "local_evaluator"):
         #env = agent.local_evaluator.env
@@ -163,9 +170,9 @@ def rollout(agent, env_name, num_steps, out="assdf", no_render=True):
                 action_array.append(action)
 
             next_state, reward, done, _ = env.step(action)
-            print(action)
-            print(reward)
-            print(done)
+            log.info("action: {}".format(action))
+            log.info("reward: {}".format(reward))
+            log.info("reward: {}".format(done))
             reward_total += reward
             if not no_render:
                 env.render()
@@ -187,15 +194,15 @@ def rollout(agent, env_name, num_steps, out="assdf", no_render=True):
             action_array=[]
         if out is not None:
             rollouts.append(rollout_num)
-        print("Episode reward", reward_total)
+        log.info("Episode reward: {}".format(reward_total))
         rollout_steps+=1
         #if out is not None:
             #pickle.dump(rollouts, open(str(out)+'reward', "wb"))
         pickle.dump(obs_reached, open("opamp_obs_reached_test","wb"))
         pickle.dump(obs_nreached, open("opamp_obs_nreached_test","wb"))
-        print("Specs reached: " + str(reached_spec) + "/" + str(len(obs_nreached))) 
+        log.info("Specs reached: {}/{}".format(str(reached_spec), str(len(obs_nreached))))
 
-    print("Num specs reached: " + str(reached_spec) + "/" + str(args.num_val_specs))
+    log.info("Num specs reached: {}/{}".format(str(reached_spec), str(args.num_val_specs)))
 
 if __name__ == "__main__":
     parser = create_parser()

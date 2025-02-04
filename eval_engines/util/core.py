@@ -1,3 +1,4 @@
+from Log import log
 import numpy as np
 import sys
 from copy import deepcopy, copy
@@ -47,7 +48,7 @@ class IDEncoder(object):
             ret_list.insert(0, cur_multiplier)
             assert cur_multiplier < sys.float_info.max, 'search space too large, cannot be represented by this machine'
 
-        print(cur_multiplier)
+        log.info(cur_multiplier)
         ret_list[:-1] = ret_list[1:]
         ret_list[-1] = 0
         return np.array(ret_list)

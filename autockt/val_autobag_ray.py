@@ -1,3 +1,4 @@
+from Log import log
 import ray
 import ray.tune as tune
 from ray.rllib.agents import ppo
@@ -37,7 +38,7 @@ if not args.checkpoint_dir:
         "config": config_train},
     })
 else:
-    print("RESTORING NOW!!!!!!")
+    log.info("RESTORING NOW!!!!!!")
     tune.run_experiments({
         "restore_ppo": {
         "run": "PPO",

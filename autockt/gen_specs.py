@@ -1,3 +1,4 @@
+from func_decorator import debug_log
 import numpy as np
 import random
 import yaml
@@ -20,12 +21,14 @@ class OrderedDictYAMLLoader(yaml.Loader):
       self.add_constructor(u'tag:yaml.org,2002:map', type(self).construct_yaml_map)
       self.add_constructor(u'tag:yaml.org,2002:omap', type(self).construct_yaml_map)
 
+  @debug_log
   def construct_yaml_map(self, node):
       data = OrderedDict()
       yield data
       value = self.construct_mapping(node)
       data.update(value)
 
+  @debug_log
   def construct_mapping(self, node, deep=False):
       if isinstance(node, yaml.MappingNode):
           self.flatten_mapping(node)
@@ -41,6 +44,7 @@ class OrderedDictYAMLLoader(yaml.Loader):
       return mapping
 
 #Generate the design specifications and then save to a pickle file
+@debug_log
 def gen_data(CIR_YAML, env, num_specs):
   with open(CIR_YAML, 'r') as f:
     yaml_data = yaml.load(f, OrderedDictYAMLLoader)

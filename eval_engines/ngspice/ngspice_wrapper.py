@@ -1,3 +1,5 @@
+from Log import log
+from func_decorator import debug_log
 import re
 import numpy as np
 import copy
@@ -33,6 +35,7 @@ class NgSpiceWrapper(object):
         self.num_process = num_process
         self.gen_dir = os.path.join(self.root_dir, "designs_" + self.base_design_name)
 
+        #创建目录，如果已存在不会抛出异常
         os.makedirs(self.root_dir, exist_ok=True)
         os.makedirs(self.gen_dir, exist_ok=True)
 
@@ -40,12 +43,14 @@ class NgSpiceWrapper(object):
         self.tmp_lines = raw_file.readlines()
         raw_file.close()
 
+    @debug_log
     def get_design_name(self, state):
         fname = self.base_design_name
         for value in state.values():
             fname += "_" + str(value)
         return fname
 
+    @debug_log
     def create_design(self, state, new_fname):
         design_folder = os.path.join(self.gen_dir, new_fname)+str(random.randint(0,10000))
         os.makedirs(design_folder, exist_ok=True)
@@ -83,6 +88,7 @@ class NgSpiceWrapper(object):
             f.close()
         return design_folder, fpath
 
+    @debug_log
     def simulate(self, fpath):
         info = 0 # this means no error occurred
         command = "ngspice -b %s >/dev/null 2>&1" %fpath
@@ -96,7 +102,7 @@ class NgSpiceWrapper(object):
             info = 1 # this means an error has occurred
         return info
 
-
+    @debug_log
     def create_design_and_simulate(self, state, dsn_name=None, verbose=False):
         if debug:
             print('state', state)
@@ -112,7 +118,7 @@ class NgSpiceWrapper(object):
         specs = self.translate_result(design_folder)
         return state, specs, info
 
-
+    @debug_log
     def run(self, states, design_names=None, verbose=False):
         """
 
@@ -128,6 +134,7 @@ class NgSpiceWrapper(object):
         pool.close()
         return specs
 
+    @debug_log
     def translate_result(self, output_path):
         """
         This method needs to be overwritten according to cicuit needs,
