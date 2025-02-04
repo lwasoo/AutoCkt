@@ -1,3 +1,12 @@
+import sys
+from pathlib import Path
+
+# 获取当前脚本的绝对路径（correct_inputs.py）
+current_file = Path(__file__).resolve()
+# 向上回溯到 AutoCkt 根目录（根据实际层级调整）
+project_root = current_file.parent.parent.parent.parent  # 例如：../../..
+sys.path.append(str(project_root))
+
 from Log import log
 from func_decorator import debug_log
 import os
