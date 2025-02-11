@@ -23,7 +23,7 @@ FROM centos:7
 # 如果无法解析，添加到deamon.json "dns": [ "8.8.8.8", "8.8.4.4"]
 
 # --------------- 第一步：替换 CentOS 7 软件源为阿里云镜像 ---------------
-    RUN mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.backup \
+RUN mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.backup \
     && curl -o /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo \
     && sed -i 's/mirror.centos.org/mirrors.aliyun.com/g' /etc/yum.repos.d/CentOS-Base.repo \
     && yum clean all \
