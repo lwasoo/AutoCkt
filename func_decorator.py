@@ -28,8 +28,10 @@ def debug_log(func):
     """装饰器：在函数进入和退出时记录日志"""
     @wraps(func)
     def wrapper(*args, **kwargs):
-        log.debug("Entering function: {}".format(func.__name__))
+        file_name = os.path.basename(func.__code__.co_filename)
+
+        log.debug("[{}]Entering function: {}".format(file_name, func.__name__))
         result = func(*args, **kwargs)
-        log.debug("Complete function: {}".format(func.__name__))
+        log.debug("[{}]Complete function: {}".format(file_name, func.__name__))
         return result
     return wrapper
