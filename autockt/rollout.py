@@ -19,7 +19,7 @@ import ray
 from ray.rllib.agents.registry import get_agent_class
 from ray.tune.registry import register_env
 
-#from bag_deep_ckt.autockt.envs.bag_opamp_discrete import TwoStageAmp
+# from bag_deep_ckt.autockt.envs.bag_opamp_discrete import TwoStageAmp
 from envs.ngspice_vanilla_opamp import TwoStageAmp
 
 EXAMPLE_USAGE = """
@@ -35,7 +35,8 @@ Example Usage via executable:
 #
 # ModelCatalog.register_custom_model("pa_model", ParametricActionsModel)
 # register_env("pa_cartpole", lambda _: ParametricActionCartpole(10))
-register_env("opamp-v0", lambda config:TwoStageAmp(config))
+register_env("opamp-v0", lambda config: TwoStageAmp(config))
+
 
 @debug_log
 def create_parser(parser_creator=None):
@@ -43,7 +44,7 @@ def create_parser(parser_creator=None):
     parser = parser_creator(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="Roll out a reinforcement learning agent "
-        "given a checkpoint.",
+                    "given a checkpoint.",
         epilog=EXAMPLE_USAGE)
     parser.add_argument(
         "checkpoint", type=str, help="Checkpoint from which to roll out.")
@@ -53,9 +54,9 @@ def create_parser(parser_creator=None):
         type=str,
         required=True,
         help="The algorithm or model to train. This may refer to the name "
-        "of a built-on algorithm (e.g. RLLib's DQN or PPO), or a "
-        "user-defined trainable function or class registered in the "
-        "tune registry.")
+             "of a built-on algorithm (e.g. RLLib's DQN or PPO), or a "
+             "user-defined trainable function or class registered in the "
+             "tune registry.")
     required_named.add_argument(
         "--env", type=str, help="The gym environment to use.")
     parser.add_argument(
@@ -72,7 +73,7 @@ def create_parser(parser_creator=None):
         default="{}",
         type=json.loads,
         help="Algorithm-specific configuration (e.g. env, hyperparams). "
-        "Surpresses loading of configuration from checkpoint.")
+             "Surpresses loading of configuration from checkpoint.")
     parser.add_argument(
         "--num_val_specs",
         type=int,
@@ -84,6 +85,7 @@ def create_parser(parser_creator=None):
         default=60,
         help="Length of each trajectory")
     return parser
+
 
 @debug_log
 def run(args, parser):
@@ -101,7 +103,7 @@ def run(args, parser):
         with open(config_path) as f:
             config = json.load(f)
         if "num_workers" in config:
-            config["num_workers"] = 0#min(2, config["num_workers"])
+            config["num_workers"] = 0  # min(2, config["num_workers"])
 
     if not args.env:
         if not config.get("env"):
@@ -116,25 +118,27 @@ def run(args, parser):
     num_steps = int(args.steps)
     rollout(agent, args.env, num_steps, args.out, args.no_render)
 
+
 @debug_log
 def unlookup(norm_spec, goal_spec):
-    spec = -1*np.multiply((norm_spec+1), goal_spec)/(norm_spec-1) 
+    spec = -1 * np.multiply((norm_spec + 1), goal_spec) / (norm_spec - 1)
     return spec
+
 
 @debug_log
 def rollout(agent, env_name, num_steps, out="assdf", no_render=True):
     if hasattr(agent, "local_evaluator"):
-        #env = agent.local_evaluator.env
-        env_config = {"generalize":True,"num_valid":args.num_val_specs, "save_specs":False, "run_valid":True}
+        # env = agent.local_evaluator.env
+        env_config = {"generalize": True, "num_valid": args.num_val_specs, "save_specs": False, "run_valid": True}
         if env_name == "opamp-v0":
             env = TwoStageAmp(env_config=env_config)
     else:
         env = gym.make(env_name)
 
-    #get unnormlaized specs
+    # get unnormlaized specs
     norm_spec_ref = env.global_g
     spec_num = len(env.specs)
-     
+
     if hasattr(agent, "local_evaluator"):
         state_init = agent.local_evaluator.policy_map[
             "default"].get_initial_state()
@@ -157,10 +161,10 @@ def rollout(agent, env_name, num_steps, out="assdf", no_render=True):
         if out is not None:
             rollout_num = []
         state = env.reset()
-        
+
         done = False
         reward_total = 0.0
-        steps=0
+        steps = 0
         while not done and steps < args.traj_len:
             if use_lstm:
                 action, state_init, logits = agent.compute_action(
@@ -181,7 +185,7 @@ def rollout(agent, env_name, num_steps, out="assdf", no_render=True):
                 next_states.append(next_state)
             steps += 1
             state = next_state
-        norm_ideal_spec = state[spec_num:spec_num+spec_num]
+        norm_ideal_spec = state[spec_num:spec_num + spec_num]
         ideal_spec = unlookup(norm_ideal_spec, norm_spec_ref)
         if done == True:
             reached_spec += 1
@@ -190,19 +194,20 @@ def rollout(agent, env_name, num_steps, out="assdf", no_render=True):
             action_array = []
             pickle.dump(action_arr_comp, open("action_arr_test", "wb"))
         else:
-            obs_nreached.append(ideal_spec)          #save unreached observation 
-            action_array=[]
+            obs_nreached.append(ideal_spec)  # save unreached observation
+            action_array = []
         if out is not None:
             rollouts.append(rollout_num)
         log.info("Episode reward: {}".format(reward_total))
-        rollout_steps+=1
-        #if out is not None:
-            #pickle.dump(rollouts, open(str(out)+'reward', "wb"))
-        pickle.dump(obs_reached, open("opamp_obs_reached_test","wb"))
-        pickle.dump(obs_nreached, open("opamp_obs_nreached_test","wb"))
+        rollout_steps += 1
+        # if out is not None:
+        # pickle.dump(rollouts, open(str(out)+'reward', "wb"))
+        pickle.dump(obs_reached, open("opamp_obs_reached_test", "wb"))
+        pickle.dump(obs_nreached, open("opamp_obs_nreached_test", "wb"))
         log.info("Specs reached: {}/{}".format(str(reached_spec), str(len(obs_nreached))))
 
     log.info("Num specs reached: {}/{}".format(str(reached_spec), str(args.num_val_specs)))
+
 
 if __name__ == "__main__":
     parser = create_parser()

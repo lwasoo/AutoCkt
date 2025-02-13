@@ -12,6 +12,7 @@ from copy import deepcopy, copy
 
 from typing import TYPE_CHECKING, List, Optional, Dict, Any, Tuple, Sequence
 
+
 ##########################
 ##   Data structures    ##
 ##########################
@@ -42,9 +43,9 @@ class IDEncoder(object):
         for i in range(10):
             lookup[i] = str(i)
         for i in range(n_letters):
-            lookup[i+10] = chr(ord('a')+i)
+            lookup[i + 10] = chr(ord('a') + i)
         for i in range(n_letters):
-            lookup[i+10+n_letters] = chr(ord('A')+i)
+            lookup[i + 10 + n_letters] = chr(ord('A') + i)
         return lookup
 
     def _compute_multipliers(self):
@@ -89,6 +90,7 @@ class IDEncoder(object):
         padded = self._pad(base_letter)
         return ''.join(padded)
 
+
 class Design(list):
     def __init__(self, spec_range, id_encoder, seq=()):
         """
@@ -97,8 +99,8 @@ class Design(list):
         :param seq: input parameter vector as a List
         """
         list.__init__(self, seq)
-        self.cost =     None
-        self.fitness =  None
+        self.cost = None
+        self.fitness = None
         self.specs = {}
         # uniquely determines the id of the design given the list values
         self.id_encoder = id_encoder
@@ -133,6 +135,7 @@ class Design(list):
         new.specs = deepcopy(self.specs)
         return new
 
+
 def relable(db, eval_core):
     for design in db:
         design.cost = 0
@@ -140,4 +143,3 @@ def relable(db, eval_core):
             design.cost += eval_core.compute_penalty(design.specs[spec_kwrd], spec_kwrd)[0]
 
     return db
-
