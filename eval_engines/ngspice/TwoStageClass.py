@@ -12,6 +12,7 @@ debug = False
 
 from eval_engines.ngspice.ngspice_wrapper import NgSpiceWrapper
 
+
 class TwoStageClass(NgSpiceWrapper):
 
     @debug_log
@@ -24,11 +25,10 @@ class TwoStageClass(NgSpiceWrapper):
         """
 
         # use parse output here
-        freq, vout,  ibias = self.parse_output(output_path)
+        freq, vout, ibias = self.parse_output(output_path)
         gain = self.find_dc_gain(vout)
         ugbw = self.find_ugbw(freq, vout)
         phm = self.find_phm(freq, vout)
-
 
         spec = dict(
             ugbw=ugbw,
@@ -53,13 +53,13 @@ class TwoStageClass(NgSpiceWrapper):
         freq = ac_raw_outputs[:, 0]
         vout_real = ac_raw_outputs[:, 1]
         vout_imag = ac_raw_outputs[:, 2]
-        vout = vout_real + 1j*vout_imag
+        vout = vout_real + 1j * vout_imag
         ibias = -dc_raw_outputs[1]
 
         return freq, vout, ibias
 
     @debug_log
-    def find_dc_gain (self, vout):
+    def find_dc_gain(self, vout):
         return np.abs(vout)[0]
 
     @debug_log
@@ -75,8 +75,8 @@ class TwoStageClass(NgSpiceWrapper):
     def find_phm(self, freq, vout):
         gain = np.abs(vout)
         phase = np.angle(vout, deg=False)
-        phase = np.unwrap(phase) # unwrap the discontinuity
-        phase = np.rad2deg(phase) # convert to degrees
+        phase = np.unwrap(phase)  # unwrap the discontinuity
+        phase = np.rad2deg(phase)  # convert to degrees
         #
         # plt.subplot(211)
         # plt.plot(np.log10(freq[:200]), 20*np.log10(gain[:200]))
@@ -87,7 +87,7 @@ class TwoStageClass(NgSpiceWrapper):
         ugbw, valid = self._get_best_crossing(freq, gain, val=1)
         if valid:
             if phase_fun(ugbw) > 0:
-                return -180+phase_fun(ugbw)
+                return -180 + phase_fun(ugbw)
             else:
                 return 180 + phase_fun(ugbw)
         else:
@@ -108,6 +108,7 @@ class TwoStageClass(NgSpiceWrapper):
             # if abs(fzero(xstart)) < abs(fzero(xstop)):
             #     return xstart
             return xstop, False
+
 
 class TwoStageMeasManager(object):
 

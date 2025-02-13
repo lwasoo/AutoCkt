@@ -3,6 +3,7 @@ import numpy as np
 import sys
 from copy import deepcopy, copy
 
+
 class IDEncoder(object):
     # example: input = [1,2,3], bases = [10, 3, 8]
     # [10, 3, 8] -> [3x8, 8, 0]
@@ -31,9 +32,9 @@ class IDEncoder(object):
         for i in range(10):
             lookup[i] = str(i)
         for i in range(n_letters):
-            lookup[i+10] = chr(ord('a')+i)
+            lookup[i + 10] = chr(ord('a') + i)
         for i in range(n_letters):
-            lookup[i+10+n_letters] = chr(ord('A')+i)
+            lookup[i + 10 + n_letters] = chr(ord('A') + i)
         return lookup
 
     def _compute_multipliers(self):
@@ -88,8 +89,8 @@ class Design(list):
         :param seq: input parameter vector as a List
         """
         list.__init__(self, seq)
-        self.cost =     None
-        self.fitness =  None
+        self.cost = None
+        self.fitness = None
         self.specs = {}
         # uniquely determines the id of the design given the list values
         self.id_encoder = id_encoder
@@ -111,6 +112,7 @@ class Design(list):
             return True
         else:
             return False
+
     def is_mutated(self):
         if self.parent1 is not None:
             if self.parent2 is None:

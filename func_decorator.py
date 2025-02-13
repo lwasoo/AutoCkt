@@ -2,7 +2,6 @@ import logging
 import os
 from functools import wraps  # 导入 wraps
 
-
 # 定义日志文件路径
 log_file_path = "/tmp/progress.log"
 
@@ -24,8 +23,10 @@ log_handler.setFormatter(formatter)
 # 将处理器添加到logger
 log.addHandler(log_handler)
 
+
 def debug_log(func):
     """装饰器：在函数进入和退出时记录日志"""
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         file_name = os.path.basename(func.__code__.co_filename)
@@ -34,4 +35,5 @@ def debug_log(func):
         result = func(*args, **kwargs)
         log.debug("[{}]Complete function: {}".format(file_name, func.__name__))
         return result
+
     return wrapper

@@ -12,6 +12,7 @@ from func_decorator import debug_log
 import os
 import re
 
+
 @debug_log
 def update_file(fname, path_to_model):
     log.info("changing {}".format(fname))
@@ -28,6 +29,7 @@ def update_file(fname, path_to_model):
     with open(fname, 'w') as f:
         f.writelines(lines)
         f.close()
+
 
 if __name__ == '__main__':
     cur_fpath = os.path.realpath(__file__)
