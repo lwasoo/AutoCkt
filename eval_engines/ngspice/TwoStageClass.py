@@ -93,6 +93,37 @@ class TwoStageClass(NgSpiceWrapper):
         else:
             return -180
 
+
+    '''
+    @debug_log
+    def find_phm(self, freq, vout):
+      gain = np.abs(vout)
+      phase = np.angle(vout, deg=False)
+      phase = np.unwrap(phase)  
+      phase = np.rad2deg(phase)  
+
+      # 插值相位曲线
+      phase_fun = interp.interp1d(freq, phase, kind='cubic', fill_value="extrapolate")
+      ugbw, valid = self._get_best_crossing(freq, gain, val=1)
+
+      if valid:
+          phm = phase_fun(ugbw)
+
+          # 计算 UGBW 附近的相位均值，前后各选取五个点
+          idx = np.searchsorted(freq, ugbw)
+          phm_avg = np.mean(phase[max(0, idx-5): min(len(phase), idx+5)])
+
+          # 若相位值偏离均值太多，说明可能受到噪声影响，则用均值代替
+          if abs(phm - phm_avg) > 20:
+              phm = phm_avg
+          phm = phm + 180  
+          return phm 
+
+      else:
+        return -180
+
+    '''
+    
     @debug_log
     def _get_best_crossing(cls, xvec, yvec, val):
         interp_fun = interp.InterpolatedUnivariateSpline(xvec, yvec)
