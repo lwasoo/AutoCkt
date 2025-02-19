@@ -1,0 +1,82 @@
+// Generated for: spectre
+// Generated on: Feb 19 14:11:16 2025
+// Design library name: Test_library
+// Design cell name: test_2_tb
+// Design view name: schematic
+simulator lang=spectre
+global 0
+include "$SPECTRE_MODEL_PATH/design_wrapper.lib.scs" section=mainlib
+include "$SPECTRE_MODEL_PATH/design_wrapper.lib.scs" section=FET_tt_pre
+include "$SPECTRE_MODEL_PATH/design_wrapper.lib.scs" section=Res_nom
+include "$SPECTRE_MODEL_PATH/design_wrapper.lib.scs" section=MOSCap_nom
+include "$SPECTRE_MODEL_PATH/design_wrapper.lib.scs" section=APMOMCap_nom
+include "$SPECTRE_MODEL_PATH/design_wrapper.lib.scs" section=MIMCap_nom
+include "$SPECTRE_MODEL_PATH/design_wrapper.lib.scs" section=Ind_nom
+include "$SPECTRE_MODEL_PATH/design_wrapper.lib.scs" section=DioCap_nom
+
+// Library name: Test_library
+// Cell name: test_2
+// View name: schematic
+subckt test_2 VDD VSS vin\+ vin\- vout vout_test
+    MN6 (net02 net02 VSS VSS) dgxnfet l=500n w=1.5u ad=315f as=315f \
+        pd=3.42u ps=3.42u m=1 nf=1 par=1 par_nf=(1) pccrit=0 ptwell=0 \
+        plnest=1 plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 sca=0 \
+        scb=0 scc=0 p_vta=0 pre_layout_local=-1
+    MN2 (vout_test vin\+ net9 net9) dgxnfet l=500n w=1.5u ad=315f as=315f \
+        pd=3.42u ps=3.42u m=1 nf=1 par=1 par_nf=(1) pccrit=0 ptwell=0 \
+        plnest=1 plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 sca=0 \
+        scb=0 scc=0 p_vta=0 pre_layout_local=-1
+    MN7 (vout net02 VSS VSS) dgxnfet l=500n w=30u ad=6.3p as=6.3p \
+        pd=60.42u ps=60.42u m=1 nf=1 par=1 par_nf=(1) pccrit=0 ptwell=0 \
+        plnest=1 plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 sca=0 \
+        scb=0 scc=0 p_vta=0 pre_layout_local=-1
+    MN5 (net9 net02 VSS VSS) dgxnfet l=500n w=6u ad=1.26p as=1.26p \
+        pd=12.42u ps=12.42u m=1 nf=1 par=1 par_nf=(1) pccrit=0 ptwell=0 \
+        plnest=1 plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 sca=0 \
+        scb=0 scc=0 p_vta=0 pre_layout_local=-1
+    MN1 (net10 vin\- net9 net9) dgxnfet l=500n w=1.5u ad=315f as=315f \
+        pd=3.42u ps=3.42u m=1 nf=1 par=1 par_nf=(1) pccrit=0 ptwell=0 \
+        plnest=1 plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 sca=0 \
+        scb=0 scc=0 p_vta=0 pre_layout_local=-1
+    MP2 (vout vout_test VDD VDD) dgxpfet l=400n w=36u ad=7.56p as=7.56p \
+        pd=72.42u ps=72.42u m=1 nf=1 par=1 par_nf=(1) pccrit=0 plnest=1 \
+        plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 p_vta=0 sca=0 \
+        scb=0 scc=0 pre_layout_local=-1 ptwell=0
+    MP1 (net10 net10 VDD VDD) dgxpfet l=500n w=6u ad=1.26p as=1.26p \
+        pd=12.42u ps=12.42u m=1 nf=1 par=1 par_nf=(1) pccrit=0 plnest=1 \
+        plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 p_vta=0 sca=0 \
+        scb=0 scc=0 pre_layout_local=-1 ptwell=0
+    MP0 (vout_test net10 VDD VDD) dgxpfet l=500n w=6u ad=1.26p as=1.26p \
+        pd=12.42u ps=12.42u m=1 nf=1 par=1 par_nf=(1) pccrit=0 plnest=1 \
+        plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 p_vta=0 sca=0 \
+        scb=0 scc=0 pre_layout_local=-1 ptwell=0
+    Cc (vout vout_test) capacitor c=3.3p
+    I4 (VDD net02) isource dc=10u type=dc
+ends test_2
+// End of subcircuit definition.
+
+// Library name: Test_library
+// Cell name: test_2_tb
+// View name: schematic
+I0 (net011 0 net02 net03 Vout vout_test) test_2
+V5 (net02 0) vsource dc=1.8 mag=1 phase=0 type=dc
+V9 (net03 0) vsource dc=1.8 mag=1 phase=180 type=dc
+VDD (net011 0) vsource dc=3.3 type=dc
+CL (Vout 0) capacitor c=2p
+C0 (vout_test 0) capacitor c=5p
+simulatorOptions options psfversion="1.1.0" reltol=1e-3 vabstol=1e-6 \
+    iabstol=1e-12 temp=27 tnom=27 scalem=1.0 scale=1.0 gmin=1e-12 rforce=1 \
+    vthmod=vthcc ivthn=300e-9 ivthp=70e-9 ivthw=0 ivthl=0 maxnotes=5 \
+    maxwarns=5 digits=5 cols=80 pivrel=1e-3 sensfile="../psf/sens.output" \
+    checklimitdest=psf vdsatmod=gds 
+ac ac start=1 stop=100M annotate=status 
+dcOp dc write="spectre.dc" maxiters=150 maxsteps=10000 annotate=status
+dcOpInfo info what=oppoint where=rawfile
+modelParameter info what=models where=rawfile
+element info what=inst where=rawfile
+outputParameter info what=output where=rawfile
+designParamVals info what=parameters where=rawfile
+primitives info what=primitives where=rawfile
+subckts info what=subckts where=rawfile
+save Vout 
+saveOptions options save=allpub
