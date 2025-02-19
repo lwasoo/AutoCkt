@@ -1,3 +1,7 @@
+'''
+该文件主要用于这段代码用于自动更新 SPICE 电路仿真文件（.cir 文件）中 .include 语句的路径，
+确保它们正确指向 spice_models/45nm_bulk.txt，避免因为路径错误导致 SPICE 仿真失败。
+'''
 import sys
 from pathlib import Path
 
@@ -6,11 +10,6 @@ current_file = Path(__file__).resolve()
 # 向上回溯到 AutoCkt 根目录（根据实际层级调整）
 project_root = current_file.parent.parent.parent.parent  # 例如：../../..
 sys.path.append(str(project_root))
-
-
-#该文件主要用于这段代码用于自动更新 SPICE 电路仿真文件（.cir 文件）中 .include 语句的路径，
-#确保它们正确指向 spice_models/45nm_bulk.txt，避免因为路径错误导致 SPICE 仿真失败。
-
 
 from Log import log
 from func_decorator import debug_log
