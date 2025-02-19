@@ -134,29 +134,22 @@ class TwoStageAmp(gym.Env):
 
     @debug_log
     def reset(self):
-        # if multi-goal is selected, every time reset occurs, it will select a different design spec as objective
-        if self.generalize == True:
-            if self.valid == True:
+        # 合并多目标选择逻辑
+        if self.generalize or self.multi_goal:
+            if self.generalize and self.valid:
+                # 顺序循环选择索引
                 if self.obj_idx > self.num_os - 1:
                     self.obj_idx = 0
                 idx = self.obj_idx
                 self.obj_idx += 1
             else:
+                # 随机选择索引
                 idx = random.randint(0, self.num_os - 1)
-            self.specs_ideal = []
-            for spec in list(self.specs.values()):
-                self.specs_ideal.append(spec[idx])
-            self.specs_ideal = np.array(self.specs_ideal)
+            # 统一生成目标规格数组
+            self.specs_ideal = np.array([spec[idx] for spec in self.specs.values()])
         else:
-            if self.multi_goal == False:
-                self.specs_ideal = self.g_star
-            else:
-                idx = random.randint(0, self.num_os - 1)
-                self.specs_ideal = []
-                for spec in list(self.specs.values()):
-                    self.specs_ideal.append(spec[idx])
-                self.specs_ideal = np.array(self.specs_ideal)
-        # print("num total:"+str(self.num_os))
+            # 单目标情况，使用固定规格
+            self.specs_ideal = self.g_star
 
         # applicable only when you have multiple goals, normalizes everything to some global_g
         self.specs_ideal_norm = self.lookup(self.specs_ideal, self.global_g)

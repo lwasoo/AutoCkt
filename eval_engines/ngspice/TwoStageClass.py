@@ -64,8 +64,7 @@ class TwoStageClass(NgSpiceWrapper):
 
     @debug_log
     def find_ugbw(self, freq, vout):
-        gain = np.abs(vout)
-        ugbw, valid = self._get_best_crossing(freq, gain, val=1)
+        ugbw, valid = self._compute_ugbw(freq, vout)
         if valid:
             return ugbw
         else:
@@ -73,7 +72,7 @@ class TwoStageClass(NgSpiceWrapper):
 
     @debug_log
     def find_phm(self, freq, vout):
-        gain = np.abs(vout)
+        ugbw, valid = self._compute_ugbw(freq, vout)
         phase = np.angle(vout, deg=False)
         phase = np.unwrap(phase)  # unwrap the discontinuity
         phase = np.rad2deg(phase)  # convert to degrees
@@ -84,7 +83,6 @@ class TwoStageClass(NgSpiceWrapper):
         # plt.plot(np.log10(freq[:200]), phase)
 
         phase_fun = interp.interp1d(freq, phase, kind='quadratic')
-        ugbw, valid = self._get_best_crossing(freq, gain, val=1)
         if valid:
             if phase_fun(ugbw) > 0:
                 return -180 + phase_fun(ugbw)
@@ -93,7 +91,11 @@ class TwoStageClass(NgSpiceWrapper):
         else:
             return -180
 
-  
+    @debug_log
+    def _compute_ugbw(self, freq, vout):
+        gain = np.abs(vout)
+        return self._get_best_crossing(freq, gain, val=1)
+
     @debug_log
     def _get_best_crossing(cls, xvec, yvec, val):
         interp_fun = interp.InterpolatedUnivariateSpline(xvec, yvec)
@@ -105,9 +107,6 @@ class TwoStageClass(NgSpiceWrapper):
         try:
             return sciopt.brentq(fzero, xstart, xstop), True
         except ValueError:
-            # avoid no solution
-            # if abs(fzero(xstart)) < abs(fzero(xstop)):
-            #     return xstart
             return xstop, False
 
 
