@@ -156,8 +156,9 @@ class NgSpiceWrapper(object):
         result = None
         return result
 
+
     """
-    from Log import log
+from Log import log
 from func_decorator import debug_log
 import re
 import numpy as np
