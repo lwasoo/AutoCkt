@@ -7,6 +7,11 @@ from multiprocessing.dummy import Pool as ThreadPool
 import os
 import yaml
 import random
+import scipy.interpolate as interp
+import scipy.optimize as sciopt
+import time
+import pprint
+import IPython
 
 debug = False
 
@@ -58,13 +63,15 @@ class SpectreWrapper(object):  # 修改: 类名从 NgSpiceWrapper 改为 Spectre
               if found:
                 pass  # Spectre 的 include 语句保持不变
 
-            if 'dgxnfet' or 'dgxpfet' or 'capacitor' or 'isource' in line:  # 修改: 适配 Spectre 语言中的参数设置
+            if any(keyword in line for keyword in
+                   ['MN6', 'MN2', 'MN7', 'MN1', 'MP2', 'MP1', 'MP0', 'Cc', 'I4']):  # 修改: 适配 Spectre 语言中的参数设置
                 for key, value in state.items():
                     regex = re.compile("%s=(\S+)" % (key))
                     found = regex.search(line)
                     if found:
                         new_replacement = "%s=%s" % (key, str(value))
                         lines[line_num] = lines[line_num].replace(found.group(0), new_replacement)
+
 
             if 'saveOptions' in line:  # 修改: Spectre 使用 saveOptions 进行数据存储
                 regex = re.compile('save=allpub')
@@ -74,6 +81,7 @@ class SpectreWrapper(object):  # 修改: 类名从 NgSpiceWrapper 改为 Spectre
         with open(fpath, 'w') as f:
             f.writelines(lines)
         return design_folder, fpath
+
 
     @debug_log
     def simulate(self, fpath):
