@@ -10,10 +10,10 @@ import time
 
 debug = False
 
-from eval_engines.ngspice.ngspice_wrapper import NgSpiceWrapper
+from eval_engines.ngspice.SpectreWrapper import SpectreWrapper
 
 
-class TwoStageClass(NgSpiceWrapper):
+class TwoStageClass(SpectreWrapper):
 
     @debug_log
     def translate_result(self, output_path):
