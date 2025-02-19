@@ -1,3 +1,7 @@
+'''
+该文件主要用于这段代码用于自动更新 SPICE 电路仿真文件（.cir 文件）中 .include 语句的路径，
+确保它们正确指向 spice_models/45nm_bulk.txt，避免因为路径错误导致 SPICE 仿真失败。
+'''
 import sys
 from pathlib import Path
 
@@ -12,10 +16,9 @@ from func_decorator import debug_log
 import os
 import re
 
-
 @debug_log
 def update_file(fname, path_to_model):
-    log.info("changing {}".format(fname))
+    log.info("changing {}".format(fname)) #log.info函数便是用记录日志打印fname
     with open(fname, 'r') as f:
         lines = f.readlines()
 
@@ -29,7 +32,6 @@ def update_file(fname, path_to_model):
     with open(fname, 'w') as f:
         f.writelines(lines)
         f.close()
-
 
 if __name__ == '__main__':
     cur_fpath = os.path.realpath(__file__)

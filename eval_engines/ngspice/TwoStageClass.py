@@ -93,6 +93,7 @@ class TwoStageClass(NgSpiceWrapper):
         else:
             return -180
 
+  
     @debug_log
     def _get_best_crossing(cls, xvec, yvec, val):
         interp_fun = interp.InterpolatedUnivariateSpline(xvec, yvec)
