@@ -73,7 +73,7 @@ def gen_data(CIR_YAML, env, num_specs):
     for key, value in specs_range.items():  # 遍历原 YAML 文件中的 target_specs 规格
         specs_range[key] = specs_valid[i]  # 将 specs_valid 里的值按顺序赋回 specs_range
         i += 1
-    with open("autockt/gen_specs/ngspice_specs_gen_" + env, 'wb') as f:
+    with open("autockt/gen_specs/spectre_specs_gen_" + env, 'wb') as f: #original ngspice_specs_gen_
         pickle.dump(specs_range, f)
 
 
