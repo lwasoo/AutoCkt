@@ -71,7 +71,6 @@ class SpectreWrapper(object):  # 修改: 类名从 NgSpiceWrapper 改为 Spectre
                         new_replacement = "%s=%s" % (key, str(value))
                         lines[line_num] = lines[line_num].replace(found.group(0), new_replacement)
 
-
             if 'saveOptions' in line:  # 修改: Spectre 使用 saveOptions 进行数据存储
                 regex = re.compile('save=allpub')
                 if regex.search(line):
