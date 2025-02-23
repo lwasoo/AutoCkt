@@ -63,8 +63,7 @@ class SpectreWrapper(object):  # 修改: 类名从 NgSpiceWrapper 改为 Spectre
               if found:
                 pass  # Spectre 的 include 语句保持不变
 
-            if any(keyword in line for keyword in
-                   ['MN6', 'MN2', 'MN7', 'MN1', 'MP2', 'MP1', 'MP0', 'Cc', 'I4']):  # 修改: 适配 Spectre 语言中的参数设置
+            if ".parameter" in line:  # 修改: 适配 Spectre 语言中的参数设置
                 for key, value in state.items():
                     regex = re.compile("%s=(\S+)" % (key))
                     found = regex.search(line)

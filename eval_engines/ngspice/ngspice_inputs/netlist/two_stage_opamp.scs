@@ -18,40 +18,40 @@ include "$SPECTRE_MODEL_PATH/design_wrapper.lib.scs" section=DioCap_nom
 // Cell name: test_2
 // View name: schematic
 subckt test_2 VDD VSS vin\+ vin\- vout vout_test
-    MN6 (net02 net02 VSS VSS) dgxnfet l=500n w=1.5u ad=315f as=315f \
+    .parameter MN6 (net02 net02 VSS VSS) dgxnfet l=500n w=1.5u ad=315f as=315f \
         pd=3.42u ps=3.42u m=1 nf=1 par=1 par_nf=(1) pccrit=0 ptwell=0 \
         plnest=1 plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 sca=0 \
         scb=0 scc=0 p_vta=0 pre_layout_local=-1
-    MN2 (vout_test vin\+ net9 net9) dgxnfet l=500n w=1.5u ad=315f as=315f \
+    .parameter MN2 (vout_test vin\+ net9 net9) dgxnfet l=500n w=1.5u ad=315f as=315f \
         pd=3.42u ps=3.42u m=1 nf=1 par=1 par_nf=(1) pccrit=0 ptwell=0 \
         plnest=1 plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 sca=0 \
         scb=0 scc=0 p_vta=0 pre_layout_local=-1
-    MN7 (vout net02 VSS VSS) dgxnfet l=500n w=30u ad=6.3p as=6.3p \
+    .parameter MN7 (vout net02 VSS VSS) dgxnfet l=500n w=30u ad=6.3p as=6.3p \
         pd=60.42u ps=60.42u m=1 nf=1 par=1 par_nf=(1) pccrit=0 ptwell=0 \
         plnest=1 plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 sca=0 \
         scb=0 scc=0 p_vta=0 pre_layout_local=-1
-    MN5 (net9 net02 VSS VSS) dgxnfet l=500n w=6u ad=1.26p as=1.26p \
+    .parameter MN5 (net9 net02 VSS VSS) dgxnfet l=500n w=6u ad=1.26p as=1.26p \
         pd=12.42u ps=12.42u m=1 nf=1 par=1 par_nf=(1) pccrit=0 ptwell=0 \
         plnest=1 plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 sca=0 \
         scb=0 scc=0 p_vta=0 pre_layout_local=-1
-    MN1 (net10 vin\- net9 net9) dgxnfet l=500n w=1.5u ad=315f as=315f \
+    .parameter MN1 (net10 vin\- net9 net9) dgxnfet l=500n w=1.5u ad=315f as=315f \
         pd=3.42u ps=3.42u m=1 nf=1 par=1 par_nf=(1) pccrit=0 ptwell=0 \
         plnest=1 plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 sca=0 \
         scb=0 scc=0 p_vta=0 pre_layout_local=-1
-    MP2 (vout vout_test VDD VDD) dgxpfet l=400n w=36u ad=7.56p as=7.56p \
+    .parameter MP2 (vout vout_test VDD VDD) dgxpfet l=400n w=36u ad=7.56p as=7.56p \
         pd=72.42u ps=72.42u m=1 nf=1 par=1 par_nf=(1) pccrit=0 plnest=1 \
         plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 p_vta=0 sca=0 \
         scb=0 scc=0 pre_layout_local=-1 ptwell=0
-    MP1 (net10 net10 VDD VDD) dgxpfet l=500n w=6u ad=1.26p as=1.26p \
+    .parameter MP1 (net10 net10 VDD VDD) dgxpfet l=500n w=6u ad=1.26p as=1.26p \
         pd=12.42u ps=12.42u m=1 nf=1 par=1 par_nf=(1) pccrit=0 plnest=1 \
         plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 p_vta=0 sca=0 \
         scb=0 scc=0 pre_layout_local=-1 ptwell=0
-    MP0 (vout_test net10 VDD VDD) dgxpfet l=500n w=6u ad=1.26p as=1.26p \
+    .parameter MP0 (vout_test net10 VDD VDD) dgxpfet l=500n w=6u ad=1.26p as=1.26p \
         pd=12.42u ps=12.42u m=1 nf=1 par=1 par_nf=(1) pccrit=0 plnest=1 \
         plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 p_vta=0 sca=0 \
         scb=0 scc=0 pre_layout_local=-1 ptwell=0
-    Cc (vout vout_test) capacitor c=3.3p
-    I4 (VDD net02) isource dc=10u type=dc
+    .parameter Cc (vout vout_test) capacitor c=3.3p
+    .parameter I4 (VDD net02) isource dc=10u type=dc
 ends test_2
 // End of subcircuit definition.
 
