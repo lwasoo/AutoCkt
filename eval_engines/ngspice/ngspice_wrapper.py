@@ -13,12 +13,14 @@ import time
 import pprint
 import yaml
 import IPython
+import subprocess
 
 debug = False
 
 
 class NgSpiceWrapper(object):
     BASE_TMP_DIR = os.path.abspath("/tmp/ckt_da")
+    OCEAN_SCRIPT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "export.ocn")
 
     def __init__(self, num_process, yaml_path, path, root_dir=None):
         if root_dir == None:
@@ -63,51 +65,77 @@ class NgSpiceWrapper(object):
         design_folder = os.path.join(self.gen_dir, new_fname) + str(random.randint(0, 10000))
         os.makedirs(design_folder, exist_ok=True)
 
-        fpath = os.path.join(design_folder, new_fname + '.cir')
+        fpath = os.path.join(design_folder, new_fname + '.scs')
 
         lines = copy.deepcopy(self.tmp_lines)
         for line_num, line in enumerate(lines):
-            if '.include' in line:
-                regex = re.compile("\.include\s*\"(.*?)\"")
-                found = regex.search(line)
-                if found:
-                    # current_fpath = os.path.realpath(__file__)
-                    # parent_path = os.path.abspath(os.path.join(current_fpath, os.pardir))
-                    # parent_path = os.path.abspath(os.path.join(parent_path, os.pardir))
-                    # path_to_model = os.path.join(parent_path, 'spice_models/45nm_bulk.txt')
-                    # lines[line_num] = lines[line_num].replace(found.group(1), path_to_model)
-                    pass  # do not change the model path
-            if '.param' in line:
+            if line.startswith("parameters"):
+                # print(f"原始参数行: {line}")  # 打印原始参数行
                 for key, value in state.items():
-                    regex = re.compile("%s=(\S+)" % (key))  # 遍历每一个字典，查找有无匹配的key=value的形式的param，若有，则需要用regex函数进行匹配并进行提取
+                    regex = re.compile("(%s=\S+)" % key)  # 匹配 key=原值
                     found = regex.search(line)
                     if found:
                         new_replacement = "%s=%s" % (key, str(value))
-                        lines[line_num] = lines[line_num].replace(found.group(0), new_replacement)
-            if 'wrdata' in line:
-                regex = re.compile("wrdata\s*(\w+\.\w+)\s*")  # 捕获文件名，要求文件名格式为"xxx.yyy"（使用（\w+\.\w+)捕获文件名)
-                found = regex.search(line)
-                if found:
-                    replacement = os.path.join(design_folder, found.group(1))
-                    lines[line_num] = lines[line_num].replace(found.group(1), replacement)
+                        line = line.replace(found.group(0), new_replacement)  # 替换所有匹配的值
+                lines[line_num] = line  # 更新该行
+            # if 'wrdata' in line:
+            #     regex = re.compile("wrdata\s*(\w+\.\w+)\s*")  # 捕获文件名，要求文件名格式为"xxx.yyy"（使用（\w+\.\w+)捕获文件名)
+            #     found = regex.search(line)
+            #     if found:
+            #         replacement = os.path.join(design_folder, found.group(1))
+            #         lines[line_num] = lines[line_num].replace(found.group(1), replacement)
 
         with open(fpath, 'w') as f:
             f.writelines(lines)
             f.close()
+
+        # 读取 Ocean 脚本
+        with open(NgSpiceWrapper.OCEAN_SCRIPT_PATH, "r") as f:
+            tmp_lines = f.readlines()
+        regex = re.compile(r'(\?output\s*")([^"]+\.csv)(")')
+        res_regex = re.compile(r'openResults\("([^"]+\.raw)"\)')
+        for i, line in enumerate(tmp_lines):
+            found = regex.search(line)
+            if found:
+                old_path = found.group(2)  # 旧的 CSV 文件名（如 ac.csv / dc.csv）
+                new_path = os.path.join(design_folder, old_path)  # 生成新路径
+                new_line = line.replace(found.group(2), new_path)  # 替换行中的文件名
+                tmp_lines[i] = new_line
+
+            res_found = res_regex.search(line)
+            if res_found:
+                old_path = res_found.group(1)  # 旧的 raw
+                new_path = os.path.join(design_folder, new_fname + '.raw')  # 生成新路径
+                new_line = line.replace(res_found.group(1), new_path)  # 替换行中的文件名
+                tmp_lines[i] = new_line
+
+        ocean_script_path = os.path.join(design_folder, "export.ocn")  # 新的保存路径
+        with open(ocean_script_path, "w") as f:
+            f.writelines(tmp_lines)
         return design_folder, fpath
 
     @debug_log
     def simulate(self, fpath):
         info = 0  # this means no error occurred
-        command = "ngspice -b %s >/dev/null 2>&1" % fpath  # NGSpice的命令形式，目的是运行NGSpice仿真并且防止NGSpice有过多的输出
-        exit_code = os.system(command)  # os.system返回command的输出状态，值为非0和0两种
+        # 获取fpath所在目录
+        output_dir = os.path.dirname(fpath)
+        if not os.path.isfile(os.path.join(output_dir, "export.ocn")):
+            raise FileNotFoundError("Ocean script not found at expected path.")
+        
+        command = """
+        source ~/junzhe/cshrc.gf55BCDlite_v1090
+        spectre "{}" -o "{}" =log output.log
+        ocean -nograph -restore "{}"
+        """.format(fpath, output_dir, os.path.join(output_dir, "export.ocn"))
+        try:
+            subprocess.run(command, shell=True, executable="/bin/csh", check=True)
+        except subprocess.CalledProcessError as e:
+            print("Error occurred: {}".format(e))
+            info = 1  # 发生错误
         if debug:
             print(command)
             print(fpath)
 
-        if (exit_code % 256):
-            # raise RuntimeError('program {} failed!'.format(command))
-            info = 1  # this means an error has occurred
         return info
 
     @debug_log

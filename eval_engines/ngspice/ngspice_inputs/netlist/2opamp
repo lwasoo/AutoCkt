@@ -1,0 +1,83 @@
+// Generated for: spectre
+// Generated on: Feb 22 16:27:26 2025
+// Design library name: AI_project
+// Design cell name: 2_stage_opamp_tb
+// Design view name: schematic
+simulator lang=spectre
+global 0
+include "$SPECTRE_MODEL_PATH/design_wrapper.lib.scs" section=mainlib
+include "$SPECTRE_MODEL_PATH/design_wrapper.lib.scs" section=FET_tt_pre
+include "$SPECTRE_MODEL_PATH/design_wrapper.lib.scs" section=Res_nom
+include "$SPECTRE_MODEL_PATH/design_wrapper.lib.scs" section=MOSCap_nom
+include "$SPECTRE_MODEL_PATH/design_wrapper.lib.scs" section=APMOMCap_nom
+include "$SPECTRE_MODEL_PATH/design_wrapper.lib.scs" section=MIMCap_nom
+include "$SPECTRE_MODEL_PATH/design_wrapper.lib.scs" section=Ind_nom
+include "$SPECTRE_MODEL_PATH/design_wrapper.lib.scs" section=DioCap_nom
+parameters cc=3p mn1=38 mn3=9 mn4=20 mn5=60 mp1=10 mp3=4
+
+// Library name: AI_project
+// Cell name: 2_stage_opamp
+// View name: schematic
+subckt AI_project_2_stage_opamp_schematic I V\+ V\- VDD VSS Vout
+    MN5 (Vout I VSS VSS) dgnfet l=280n w=3.36u ad=705.6f as=705.6f \
+        pd=7.14u ps=7.14u m=mn5 nf=1 par=mn5 par_nf=(1) pccrit=0 ptwell=0 \
+        plnest=1 plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 \
+        p_vta=0 sca=0 scb=0 scc=0 pre_layout_local=-1
+    MN3 (net3 I VSS VSS) dgnfet l=280n w=560n ad=117.6f as=117.6f pd=1.54u \
+        ps=1.54u m=mn3 nf=1 par=mn3 par_nf=(1) pccrit=0 ptwell=0 plnest=1 \
+        plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 p_vta=0 sca=0 \
+        scb=0 scc=0 pre_layout_local=-1
+    MN4 (I I VSS VSS) dgnfet l=280n w=560n ad=117.6f as=117.6f pd=1.54u \
+        ps=1.54u m=mn4 nf=1 par=mn4 par_nf=(1) pccrit=0 ptwell=0 plnest=1 \
+        plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 p_vta=0 sca=0 \
+        scb=0 scc=0 pre_layout_local=-1
+    MN2 (net5 V\+ net3 VSS) dgnfet l=280n w=1.4u ad=294f as=294f pd=3.22u \
+        ps=3.22u m=mn1 nf=1 par=mn1 par_nf=(1) pccrit=0 ptwell=0 plnest=1 \
+        plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 p_vta=0 sca=0 \
+        scb=0 scc=0 pre_layout_local=-1
+    MN1 (net4 V\- net3 VSS) dgnfet l=280n w=1.4u ad=294f as=294f pd=3.22u \
+        ps=3.22u m=mn1 nf=1 par=mn1 par_nf=(1) pccrit=0 ptwell=0 plnest=1 \
+        plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 p_vta=0 sca=0 \
+        scb=0 scc=0 pre_layout_local=-1
+    MP3 (Vout net5 VDD VDD) dgpfet l=500n w=16u ad=3.36p as=3.36p \
+        pd=32.42u ps=32.42u m=mp3 nf=1 par=mp3 par_nf=(1) pccrit=0 \
+        plnest=1 plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 \
+        p_vta=0 sca=0 scb=0 scc=0 pre_layout_local=-1 ptwell=0
+    MP2 (net5 net4 VDD VDD) dgpfet l=280n w=1.4u ad=294f as=294f pd=3.22u \
+        ps=3.22u m=mp1 nf=1 par=mp1 par_nf=(1) pccrit=0 plnest=1 \
+        plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 p_vta=0 sca=0 \
+        scb=0 scc=0 pre_layout_local=-1 ptwell=0
+    MP1 (net4 net4 VDD VDD) dgpfet l=280n w=1.4u ad=294f as=294f pd=3.22u \
+        ps=3.22u m=mp1 nf=1 par=mp1 par_nf=(1) pccrit=0 plnest=1 \
+        plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 p_vta=0 sca=0 \
+        scb=0 scc=0 pre_layout_local=-1 ptwell=0
+    C0 (net5 Vout) capacitor c=cc
+ends AI_project_2_stage_opamp_schematic
+// End of subcircuit definition.
+
+// Library name: AI_project
+// Cell name: 2_stage_opamp_tb
+// View name: schematic
+I0 (I V\+ V\- VDD VSS Vout) AI_project_2_stage_opamp_schematic
+V1 (VDD 0) vsource dc=3.6 type=dc
+V0 (VSS 0) vsource dc=0 type=dc
+I2 (VDD I) isource dc=30u type=dc
+C0 (Vout VSS) capacitor c=1p
+IPRB0 (V\- Vout) iprobe
+V2 (V\+ 0) vsource dc=1.8 mag=1 phase=0 type=sine sinedc=1.8 ampl=1 \
+        sinephase=0 freq=10K
+simulatorOptions options psfversion="1.1.0" reltol=1e-3 vabstol=1e-6 \
+    iabstol=1e-12 temp=27 tnom=27 scalem=1.0 scale=1.0 gmin=1e-12 rforce=1 \
+    vthmod=vthcc ivthn=300e-9 ivthp=70e-9 ivthw=0 ivthl=0 maxnotes=5 \
+    maxwarns=5 digits=5 cols=80 pivrel=1e-3 sensfile="../psf/sens.output" \
+    checklimitdest=psf vdsatmod=gds 
+ac ac start=1 stop=10G annotate=status
+dcOp dc write="spectre.dc" maxiters=150 maxsteps=10000 annotate=status
+dcOpInfo info what=oppoint where=rawfile
+modelParameter info what=models where=rawfile
+element info what=inst where=rawfile
+outputParameter info what=output where=rawfile
+designParamVals info what=parameters where=rawfile
+primitives info what=primitives where=rawfile
+subckts info what=subckts where=rawfile
+saveOptions options save=allpub

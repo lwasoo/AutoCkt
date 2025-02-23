@@ -48,19 +48,27 @@ class TwoStageClass(NgSpiceWrapper):
         if not os.path.isfile(ac_fname) or not os.path.isfile(dc_fname):
             log.warning("ac/dc file doesn't exist: {}".format(output_path))
 
-        ac_raw_outputs = np.genfromtxt(ac_fname, skip_header=1)
+        ac_raw_outputs = np.genfromtxt(ac_fname, skip_header=1, delimiter=None, usecols=(0,1))
         dc_raw_outputs = np.genfromtxt(dc_fname, skip_header=1)
         freq = ac_raw_outputs[:, 0]
-        vout_real = ac_raw_outputs[:, 1]
-        vout_imag = ac_raw_outputs[:, 2]
-        vout = vout_real + 1j * vout_imag
-        ibias = -dc_raw_outputs[1]
+        vout = ac_raw_outputs[:, 1]
+        # 在读取数据后，清理 freq 和 vout
+        valid_indices = ~np.isnan(freq) & ~np.isnan(vout)  # 找到有效的索引
+        freq = freq[valid_indices]  # 过滤有效的频率
+        vout = vout[valid_indices]  # 过滤有效的输出
+
+        # # 继续使用 freq_clean 和 vout_clean 进行后续处理
+        # print("清理后的 freq: ", freq)
+        # print("清理后的 vout: ", vout)
+
+        ibias = -dc_raw_outputs
 
         return freq, vout, ibias
 
     @debug_log
     def find_dc_gain(self, vout):
-        return np.abs(vout)[0]
+        # return np.abs(vout)[0]
+        return vout[0]
 
     @debug_log
     def find_ugbw(self, freq, vout):
@@ -93,8 +101,8 @@ class TwoStageClass(NgSpiceWrapper):
 
     @debug_log
     def _compute_ugbw(self, freq, vout):
-        gain = np.abs(vout)
-        return self._get_best_crossing(freq, gain, val=1)
+        # gain = np.abs(vout)
+        return self._get_best_crossing(freq, vout, val=1)
 
     @debug_log
     def _get_best_crossing(cls, xvec, yvec, val):
