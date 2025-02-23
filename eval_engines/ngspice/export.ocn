@@ -1,0 +1,6 @@
+openResults("2opamp.raw")
+selectResult("ac")
+ocnPrint(?output "ac.csv" v("Vout") ?numberNotation "scientific")
+selectResult("dcOp")
+ocnPrint(?output "dc.csv" i("V1:p") ?numberNotation "scientific")
+exit()
