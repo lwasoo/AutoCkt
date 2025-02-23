@@ -16,7 +16,6 @@ from collections import OrderedDict
 import yaml
 import yaml.constructor
 import statistics
-import os
 import IPython
 import itertools
 from eval_engines.util.core import *
@@ -24,41 +23,7 @@ import pickle
 import os
 
 from eval_engines.ngspice.TwoStageClass import *
-
-
-# way of ordering the way a yaml file is read
-class OrderedDictYAMLLoader(yaml.Loader):
-    """
-    A YAML loader that loads mappings into ordered dictionaries.
-    """
-
-    def __init__(self, *args, **kwargs):
-        yaml.Loader.__init__(self, *args, **kwargs)
-
-        self.add_constructor(u'tag:yaml.org,2002:map', type(self).construct_yaml_map)
-        self.add_constructor(u'tag:yaml.org,2002:omap', type(self).construct_yaml_map)
-
-    @debug_log
-    def construct_yaml_map(self, node):
-        data = OrderedDict()
-        yield data
-        value = self.construct_mapping(node)
-        data.update(value)
-
-    @debug_log
-    def construct_mapping(self, node, deep=False):
-        if isinstance(node, yaml.MappingNode):
-            self.flatten_mapping(node)
-        else:
-            raise yaml.constructor.ConstructorError(None, None,
-                                                    'expected a mapping node, but found %s' % node.id, node.start_mark)
-
-        mapping = OrderedDict()
-        for key_node, value_node in node.value:
-            key = self.construct_object(key_node, deep=deep)
-            value = self.construct_object(value_node, deep=deep)
-            mapping[key] = value
-        return mapping
+from autockt.envs.read_yaml import OrderedDictYAMLLoader
 
 
 class TwoStageAmp(gym.Env):
@@ -134,29 +99,22 @@ class TwoStageAmp(gym.Env):
 
     @debug_log
     def reset(self):
-        # if multi-goal is selected, every time reset occurs, it will select a different design spec as objective
-        if self.generalize == True:
-            if self.valid == True:
+        # 合并多目标选择逻辑
+        if self.generalize or self.multi_goal:
+            if self.generalize and self.valid:
+                # 顺序循环选择索引
                 if self.obj_idx > self.num_os - 1:
                     self.obj_idx = 0
                 idx = self.obj_idx
                 self.obj_idx += 1
             else:
+                # 随机选择索引
                 idx = random.randint(0, self.num_os - 1)
-            self.specs_ideal = []
-            for spec in list(self.specs.values()):
-                self.specs_ideal.append(spec[idx])
-            self.specs_ideal = np.array(self.specs_ideal)
+            # 统一生成目标规格数组
+            self.specs_ideal = np.array([spec[idx] for spec in self.specs.values()])
         else:
-            if self.multi_goal == False:
-                self.specs_ideal = self.g_star
-            else:
-                idx = random.randint(0, self.num_os - 1)
-                self.specs_ideal = []
-                for spec in list(self.specs.values()):
-                    self.specs_ideal.append(spec[idx])
-                self.specs_ideal = np.array(self.specs_ideal)
-        # print("num total:"+str(self.num_os))
+            # 单目标情况，使用固定规格
+            self.specs_ideal = self.g_star
 
         # applicable only when you have multiple goals, normalizes everything to some global_g
         self.specs_ideal_norm = self.lookup(self.specs_ideal, self.global_g)
@@ -189,20 +147,23 @@ class TwoStageAmp(gym.Env):
         self.cur_specs = self.update(self.cur_params_idx)
         cur_spec_norm = self.lookup(self.cur_specs, self.global_g)
         reward = self.reward(self.cur_specs, self.specs_ideal)
-        done = False
+        done = reward >= 10  # 简化终止条件
 
-        # incentivize reaching goal state
-        if (reward >= 10):
-            done = True
-            log.info('-' * 10)
-            log.info('params = {}'.format(self.cur_params_idx))
-            log.info('specs: {}'.format(self.cur_specs))
-            log.info('ideal specs: {}'.format(self.specs_ideal))
-            log.info('re: {}'.format(reward))
-            log.info('-' * 10)
+        # Logging with single call if goal reached
+        if done:
+            log_details = (
+                "\n{0}\n"
+                "params = {1}\n"
+                "specs: {2}\n"
+                "ideal specs: {3}\n"
+                "re: {4}\n"
+                "{0}"
+            ).format('-' * 10, self.cur_params_idx, self.cur_specs, self.specs_ideal, reward)
+
+            log.info(log_details)  # 减少日志读写次数
 
         self.ob = np.concatenate([cur_spec_norm, self.specs_ideal_norm, self.cur_params_idx])
-        self.env_steps = self.env_steps + 1
+        self.env_steps += 1
 
         # print('cur ob:' + str(self.cur_specs))
         # print('ideal spec:' + str(self.specs_ideal))

@@ -1,4 +1,5 @@
 from Log import log
+from func_decorator import debug_log
 import numpy as np
 import sys
 from copy import deepcopy, copy
@@ -16,6 +17,7 @@ class IDEncoder(object):
         self._lookup_dict = self._create_lookup()
         self.length_letters = self._compute_length_letter()
 
+    @debug_log
     def _compute_length_letter(self):
         cur_multiplier = 1
         for base in self._bases:
@@ -26,6 +28,7 @@ class IDEncoder(object):
         return len(ret_vec)
 
     @classmethod
+    @debug_log
     def _create_lookup(cls):
         lookup = {}
         n_letters = ord('z') - ord('a') + 1
@@ -37,6 +40,7 @@ class IDEncoder(object):
             lookup[i + 10 + n_letters] = chr(ord('A') + i)
         return lookup
 
+    @debug_log
     def _compute_multipliers(self):
         """
         computes [3x8, 8, 0] in our example
@@ -54,10 +58,12 @@ class IDEncoder(object):
         ret_list[-1] = 0
         return np.array(ret_list)
 
+    @debug_log
     def _convert_2_base_10(self, input_vec):
         assert len(input_vec) == len(self._bases)
         return np.sum(np.array(input_vec) * self._mulipliers)
 
+    @debug_log
     def _convert_2_base_letters(self, input_base_10):
         x = input_base_10
         ret_list = []
@@ -68,11 +74,13 @@ class IDEncoder(object):
 
         return ret_list
 
+    @debug_log
     def _pad(self, input_base_letter):
         while len(input_base_letter) < self.length_letters:
             input_base_letter.insert(0, '0')
         return input_base_letter
 
+    @debug_log
     def convert_list_2_id(self, input_list):
         base10 = self._convert_2_base_10(input_list)
         base_letter = self._convert_2_base_letters(base10)

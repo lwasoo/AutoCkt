@@ -174,9 +174,12 @@ def rollout(agent, env_name, num_steps, out="assdf", no_render=True):
                 action_array.append(action)
 
             next_state, reward, done, _ = env.step(action)
-            log.info("action: {}".format(action))
-            log.info("reward: {}".format(reward))
-            log.info("reward: {}".format(done))
+            log_details = (
+                "action: {}\n"
+                "reward: {}\n"
+                "reward: {}"
+            ).format(action, reward, done)
+            log.info(log_details)  # 减少IO读写次数
             reward_total += reward
             if not no_render:
                 env.render()

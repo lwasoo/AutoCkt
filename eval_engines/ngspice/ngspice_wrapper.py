@@ -53,11 +53,12 @@ class NgSpiceWrapper(object):
 
     @debug_log
     def create_design(self, state, new_fname):
-
-        # 根据给定的参数 state 生成新的设计文件
-        # :param state: 电路设计参数字典
-        # :param new_fname: 生成的新文件名
-        # :return: 生成的电路设计文件所在的文件夹和路径
+        """
+         根据给定的参数 state 生成新的设计文件
+         :param state: 电路设计参数字典
+         :param new_fname: 生成的新文件名
+         :return: 生成的电路设计文件所在的文件夹和路径
+        """
 
         design_folder = os.path.join(self.gen_dir, new_fname) + str(random.randint(0, 10000))
         os.makedirs(design_folder, exist_ok=True)
@@ -78,13 +79,13 @@ class NgSpiceWrapper(object):
                     pass  # do not change the model path
             if '.param' in line:
                 for key, value in state.items():
-                    regex = re.compile("%s=(\S+)" % (key)) #遍历每一个字典，查找有无匹配的key=value的形式的param，若有，则需要用regex函数进行匹配并进行提取
+                    regex = re.compile("%s=(\S+)" % (key))  # 遍历每一个字典，查找有无匹配的key=value的形式的param，若有，则需要用regex函数进行匹配并进行提取
                     found = regex.search(line)
                     if found:
                         new_replacement = "%s=%s" % (key, str(value))
                         lines[line_num] = lines[line_num].replace(found.group(0), new_replacement)
             if 'wrdata' in line:
-                regex = re.compile("wrdata\s*(\w+\.\w+)\s*") #捕获文件名，要求文件名格式为"xxx.yyy"（使用（\w+\.\w+)捕获文件名)
+                regex = re.compile("wrdata\s*(\w+\.\w+)\s*")  # 捕获文件名，要求文件名格式为"xxx.yyy"（使用（\w+\.\w+)捕获文件名)
                 found = regex.search(line)
                 if found:
                     replacement = os.path.join(design_folder, found.group(1))
@@ -98,8 +99,8 @@ class NgSpiceWrapper(object):
     @debug_log
     def simulate(self, fpath):
         info = 0  # this means no error occurred
-        command = "ngspice -b %s >/dev/null 2>&1" % fpath #NGSpice的命令形式，目的是运行NGSpice仿真并且防止NGSpice有过多的输出
-        exit_code = os.system(command) #os.system返回command的输出状态，值为非0和0两种
+        command = "ngspice -b %s >/dev/null 2>&1" % fpath  # NGSpice的命令形式，目的是运行NGSpice仿真并且防止NGSpice有过多的输出
+        exit_code = os.system(command)  # os.system返回command的输出状态，值为非0和0两种
         if debug:
             print(command)
             print(fpath)
@@ -135,9 +136,10 @@ class NgSpiceWrapper(object):
         :return:
             results = [(state: dict(param_kwds, param_value), specs: dict(spec_kwds, spec_value), info: int)]
         """
-        pool = ThreadPool(processes=self.num_process) #创建一个多线程池，进行多个仿真任务，self.num_process为线程数量
+        pool = ThreadPool(processes=self.num_process)  # 创建一个多线程池，进行多个仿真任务，self.num_process为线程数量
         arg_list = [(state, dsn_name, verbose) for (state, dsn_name) in zip(states, design_names)]
-        specs = pool.starmap(self.create_design_and_simulate, arg_list) #starmap自动展开arg_;ist，传递参数给create_design_and_simulate进行设计仿真
+        specs = pool.starmap(self.create_design_and_simulate,
+                             arg_list)  # starmap自动展开arg_;ist，传递参数给create_design_and_simulate进行设计仿真
         pool.close()
         return specs
 
