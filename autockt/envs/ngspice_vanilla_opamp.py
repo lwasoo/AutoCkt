@@ -4,7 +4,7 @@ A new ckt environment based on a new structure of MDP
 from Log import log
 from func_decorator import debug_log
 
-import gym
+import gym  #RL的主要环境
 from gym import spaces
 
 import numpy as np
@@ -26,7 +26,7 @@ from eval_engines.ngspice.TwoStageClass import *
 from autockt.envs.read_yaml import OrderedDictYAMLLoader
 
 
-class TwoStageAmp(gym.Env):
+class TwoStageAmp(gym.Env): #该类继承子gym.Env
     metadata = {'render.modes': ['human']}
 
     PERF_LOW = -1
@@ -140,7 +140,7 @@ class TwoStageAmp(gym.Env):
         action = list(np.reshape(np.array(action), (np.array(action).shape[0],)))
         self.cur_params_idx = self.cur_params_idx + np.array([self.action_meaning[a] for a in action])
 
-        #        self.cur_params_idx = self.cur_params_idx + np.array(self.action_arr[int(action)])
+        # self.cur_params_idx = self.cur_params_idx + np.array(self.action_arr[int(action)])
         self.cur_params_idx = np.clip(self.cur_params_idx, [0] * len(self.params_id),
                                       [(len(param_vec) - 1) for param_vec in self.params])
         # Get current specs and normalize
@@ -198,7 +198,6 @@ class TwoStageAmp(gym.Env):
     @debug_log
     def update(self, params_idx):
         """
-
         :param action: an int between 0 ... n-1
         :return:
         """
