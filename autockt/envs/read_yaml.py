@@ -1,5 +1,3 @@
-from func_decorator import debug_log
-
 import yaml
 import yaml.constructor
 from collections import OrderedDict
@@ -17,14 +15,12 @@ class OrderedDictYAMLLoader(yaml.Loader):
         self.add_constructor(u'tag:yaml.org,2002:map', type(self).construct_yaml_map)
         self.add_constructor(u'tag:yaml.org,2002:omap', type(self).construct_yaml_map)
 
-    @debug_log
     def construct_yaml_map(self, node):
         data = OrderedDict()
         yield data
         value = self.construct_mapping(node)
         data.update(value)
 
-    @debug_log
     def construct_mapping(self, node, deep=False):
         if isinstance(node, yaml.MappingNode):
             self.flatten_mapping(node)

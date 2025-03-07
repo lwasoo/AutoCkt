@@ -5,7 +5,6 @@ from __future__ import division
 from __future__ import print_function
 
 from Log import log
-from func_decorator import debug_log
 
 import argparse
 import json
@@ -38,7 +37,6 @@ Example Usage via executable:
 register_env("opamp-v0", lambda config: TwoStageAmp(config))
 
 
-@debug_log
 def create_parser(parser_creator=None):
     parser_creator = parser_creator or argparse.ArgumentParser
     parser = parser_creator(
@@ -87,7 +85,6 @@ def create_parser(parser_creator=None):
     return parser
 
 
-@debug_log
 def run(args, parser):
     config = args.config
     if not config:
@@ -119,13 +116,11 @@ def run(args, parser):
     rollout(agent, args.env, num_steps, args.out, args.no_render)
 
 
-@debug_log
 def unlookup(norm_spec, goal_spec):
     spec = -1 * np.multiply((norm_spec + 1), goal_spec) / (norm_spec - 1)
     return spec
 
 
-@debug_log
 def rollout(agent, env_name, num_steps, out="assdf", no_render=True):
     if hasattr(agent, "local_evaluator"):
         # env = agent.local_evaluator.env

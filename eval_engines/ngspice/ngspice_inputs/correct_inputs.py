@@ -12,13 +12,13 @@ project_root = current_file.parent.parent.parent.parent  # 例如：../../..
 sys.path.append(str(project_root))
 
 from Log import log
-from func_decorator import debug_log
+
 import os
 import re
 
-@debug_log
+
 def update_file(fname, path_to_model):
-    log.info("changing {}".format(fname)) #log.info函数便是用记录日志打印fname
+    log.info("changing {}".format(fname))  # log.info函数便是用记录日志打印fname
     with open(fname, 'r') as f:
         lines = f.readlines()
 
@@ -32,6 +32,7 @@ def update_file(fname, path_to_model):
     with open(fname, 'w') as f:
         f.writelines(lines)
         f.close()
+
 
 if __name__ == '__main__':
     cur_fpath = os.path.realpath(__file__)

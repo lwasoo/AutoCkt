@@ -1,5 +1,4 @@
 from Log import log
-from func_decorator import debug_log
 import re
 import numpy as np
 import copy
@@ -44,14 +43,12 @@ class NgSpiceWrapper(object):
         self.tmp_lines = raw_file.readlines()
         raw_file.close()
 
-    @debug_log
     def get_design_name(self, state):
         fname = self.base_design_name
         for value in state.values():
             fname += "_" + str(value)
         return fname
 
-    @debug_log
     def create_design(self, state, new_fname):
         """
          根据给定的参数 state 生成新的设计文件
@@ -96,7 +93,6 @@ class NgSpiceWrapper(object):
             f.close()
         return design_folder, fpath
 
-    @debug_log
     def simulate(self, fpath):
         info = 0  # this means no error occurred
         command = "ngspice -b %s >/dev/null 2>&1" % fpath  # NGSpice的命令形式，目的是运行NGSpice仿真并且防止NGSpice有过多的输出
@@ -110,7 +106,6 @@ class NgSpiceWrapper(object):
             info = 1  # this means an error has occurred
         return info
 
-    @debug_log
     def create_design_and_simulate(self, state, dsn_name=None, verbose=False):
         if debug:
             print('state', state)
@@ -126,7 +121,6 @@ class NgSpiceWrapper(object):
         specs = self.translate_result(design_folder)
         return state, specs, info
 
-    @debug_log
     def run(self, states, design_names=None, verbose=False):
         """
 
@@ -143,7 +137,6 @@ class NgSpiceWrapper(object):
         pool.close()
         return specs
 
-    @debug_log
     def translate_result(self, output_path):
         """
         This method needs to be overwritten according to cicuit needs,
