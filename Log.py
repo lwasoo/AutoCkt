@@ -20,7 +20,7 @@ class LoggerWriter(io.TextIOBase):
 
 
 # 定义日志文件路径
-log_file_path = "/tmp/general.log"
+log_file_path = os.path.expanduser("~/workspace310a/general.log")
 
 # 确保日志目录存在
 os.makedirs(os.path.dirname(log_file_path), exist_ok=True)

@@ -18,7 +18,7 @@ debug = False
 
 
 class NgSpiceWrapper(object):
-    BASE_TMP_DIR = os.path.abspath("/tmp/ckt_da")
+    BASE_TMP_DIR = os.path.abspath(os.path.expanduser("~/workspace310a/ckt_da"))
     OCEAN_SCRIPT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "export.ocn")
 
     def __init__(self, num_process, yaml_path, path, root_dir=None):
@@ -120,8 +120,11 @@ class NgSpiceWrapper(object):
         
         command = """
         source ~/junzhe/cshrc.gf55BCDlite_v1090
-        spectre "{}" -o "{}" =log output.log
-        ocean -nograph -restore "{}"
+        spectre "{0}" -o "{1}" =log output.log
+        ocean -nograph -restore "{2}"
+        find "{1}" -name ".*.dep" -exec rm -rf {{}} +
+        find "{1}" -name "*.raw" -exec rm -rf {{}} +
+        rm -rf "{1}/output.log"
         """.format(fpath, output_dir, os.path.join(output_dir, "export.ocn"))
         try:
             subprocess.run(command, shell=True, executable="/bin/csh", check=True)
