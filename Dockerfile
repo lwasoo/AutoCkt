@@ -45,6 +45,12 @@ RUN yum install -y \
     libX11-devel \
     && yum clean all
 
+RUN mkdir -p /mnt/raid_p310/isrl03ws10a/workspace310a && chmod 777 /mnt/raid_p310/isrl03ws10a/workspace310a
+
+ARG USERNAME=autockt_user
+ARG USER_HOME=/mnt/raid_p310/isrl03ws10a
+RUN useradd -m -d $USER_HOME -s /bin/bash $USERNAME
+
 # 安装 Miniconda（手动指定 Python 3.5 版本）
 ENV CONDA_DIR=/opt/conda
 RUN wget https://repo.anaconda.com/miniconda/Miniconda3-4.7.12-Linux-x86_64.sh -O miniconda.sh \
@@ -69,10 +75,15 @@ RUN wget https://sourceforge.net/projects/ngspice/files/ng-spice-rework/old-rele
     && rm -rf ngspice-27*
 
 # 复制 当前（AutoCkt） 文件夹到容器中
-COPY . /app/AutoCkt
+COPY . $USER_HOME/workspace310a/AutoCkt
+RUN chown -R $USERNAME:$USERNAME $USER_HOME
+
+
+USER $USERNAME
+WORKDIR $USER_HOME/workspace310a/AutoCkt
 
 # 创建 Conda 环境
-RUN conda env create -f /app/AutoCkt/environment.yml
+RUN conda env create -f $USER_HOME/workspace310a/AutoCkt/environment.yml
 
 # --------------- 激活环境并设置默认命令 ---------------
 # centos7 需要先初始化 conda
@@ -81,9 +92,6 @@ RUN conda init bash
 # 激活环境并设置默认命令
 RUN echo "conda activate autockt" >> ~/.bashrc
 SHELL ["/bin/bash", "--login", "-c"]
-
-# 设置容器工作目录
-WORKDIR /app/AutoCkt
 
 # 设置容器默认命令
 CMD ["/bin/bash"]

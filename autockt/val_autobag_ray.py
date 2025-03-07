@@ -15,6 +15,26 @@ parser.add_argument('--checkpoint_dir', '-cpd', type=str)
 args = parser.parse_args()
 ray.init()
 
+# 软连接目标路径
+ray_results_target = os.path.expanduser("~/workspace310a/ray_results")
+ray_results_link = os.path.expanduser("~/ray_results")
+
+try:
+    if not os.path.exists(ray_results_target):
+        os.makedirs(ray_results_target)
+        log.info("Created directory: {}".format(ray_results_target))
+
+    # 确保 ~/ray_results 不是目录或已有文件
+    if os.path.exists(ray_results_link) or os.path.islink(ray_results_link):
+        os.remove(ray_results_link)  # 先删除原有的 ~/ray_results（如果存在）
+
+    # 创建软链接
+    os.symlink(ray_results_target, ray_results_link)
+    log.info("Created symlink: {} -> {}".format(ray_results_link, ray_results_target))
+
+except Exception as e:
+    log.error("Failed to create symlink: {}".format(e))
+
 sys.stdout = LoggerWriter(log.info)  # 所有 print() 变成 log.info()
 sys.stderr = LoggerWriter(log.error)  # 捕获错误信息
 
