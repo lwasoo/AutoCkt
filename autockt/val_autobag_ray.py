@@ -1,3 +1,5 @@
+import os
+
 from Log import log, LoggerWriter
 import ray
 import ray.tune as tune
@@ -28,7 +30,7 @@ try:
         # "vf_loss_coeff": 0.5,
         "horizon": 30,
         "num_gpus": 0,
-        "model": {"fcnet_hiddens": [64, 64]},
+        "model": {"fcnet_hiddens": [50, 50, 50]},
         "num_workers": 6,
         "env_config": {"generalize": True, "run_valid": False},
     }

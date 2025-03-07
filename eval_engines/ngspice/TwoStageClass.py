@@ -1,5 +1,5 @@
 from Log import log
-from func_decorator import debug_log
+
 import numpy as np
 import os
 import scipy.interpolate as interp
@@ -15,7 +15,6 @@ from eval_engines.ngspice.ngspice_wrapper import NgSpiceWrapper
 
 class TwoStageClass(NgSpiceWrapper):
 
-    @debug_log
     def translate_result(self, output_path):
         """
 
@@ -39,7 +38,6 @@ class TwoStageClass(NgSpiceWrapper):
 
         return spec
 
-    @debug_log
     def parse_output(self, output_path):
 
         ac_fname = os.path.join(output_path, 'ac.csv')
@@ -58,11 +56,9 @@ class TwoStageClass(NgSpiceWrapper):
 
         return freq, vout, ibias
 
-    @debug_log
     def find_dc_gain(self, vout):
         return np.abs(vout)[0]
 
-    @debug_log
     def find_ugbw(self, freq, vout):
         ugbw, valid = self._compute_ugbw(freq, vout)
         if valid:
@@ -70,7 +66,6 @@ class TwoStageClass(NgSpiceWrapper):
         else:
             return freq[0]
 
-    @debug_log
     def find_phm(self, freq, vout):
         ugbw, valid = self._compute_ugbw(freq, vout)
         phase = np.angle(vout, deg=False)
@@ -91,12 +86,10 @@ class TwoStageClass(NgSpiceWrapper):
         else:
             return -180
 
-    @debug_log
     def _compute_ugbw(self, freq, vout):
         gain = np.abs(vout)
         return self._get_best_crossing(freq, gain, val=1)
 
-    @debug_log
     def _get_best_crossing(cls, xvec, yvec, val):
         interp_fun = interp.InterpolatedUnivariateSpline(xvec, yvec)
 
@@ -140,7 +133,6 @@ class TwoStageMeasManager(object):
                                                                  design_netlist=netlist_val['cir_path'],
                                                                  root_dir=root_dir)
 
-    @debug_log
     def evaluate(self, design):
         state_dict = dict()
         for i, key in enumerate(self.params_vec.keys()):
@@ -155,7 +147,6 @@ class TwoStageMeasManager(object):
         specs_dict['cost'] = self.cost_fun(specs_dict)
         return specs_dict
 
-    @debug_log
     def _get_specs(self, results_dict):
         fdbck = self.measurement_specs['tb_params']['feedback_factor']
         tot_err = self.measurement_specs['tb_params']['tot_err']
@@ -193,7 +184,6 @@ class TwoStageMeasManager(object):
 
         return specs_dict
 
-    @debug_log
     def compute_penalty(self, spec_nums, spec_kwrd):
         if type(spec_nums) is not list:
             spec_nums = [spec_nums]
@@ -212,7 +202,6 @@ class TwoStageMeasManager(object):
             penalties.append(penalty)
         return penalties
 
-    @debug_log
     def cost_fun(self, specs_dict):
         """
         :param design: a list containing relative indices according to yaml file

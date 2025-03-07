@@ -7,7 +7,6 @@ current_file = Path(__file__).resolve()
 project_root = current_file.parent.parent  # 例如：../../..
 sys.path.append(str(project_root))
 
-from func_decorator import debug_log
 import numpy as np
 import random
 import yaml
@@ -21,7 +20,7 @@ from autockt.envs.read_yaml import OrderedDictYAMLLoader
 
 
 # Generate the design specifications and then save to a pickle file
-@debug_log
+
 def gen_data(CIR_YAML, env, num_specs):
     with open(CIR_YAML, 'r') as f:
         yaml_data = yaml.load(f, OrderedDictYAMLLoader)
