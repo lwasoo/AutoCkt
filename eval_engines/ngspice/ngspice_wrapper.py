@@ -118,7 +118,7 @@ class NgSpiceWrapper(object):
         command = """
         source ~/junzhe/cshrc.gf55BCDlite_v1090
         spectre "{0}" -o "{1}" =log output.log
-        ocean -nograph -restore "{2}"
+        ocean -nograph -restore "{2}" >& /dev/null
         find "{1}" -name ".*.dep" -exec rm -rf {{}} +
         find "{1}" -name "*.raw" -exec rm -rf {{}} +
         rm -rf "{1}/output.log"
