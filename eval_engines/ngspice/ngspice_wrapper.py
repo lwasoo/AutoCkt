@@ -72,7 +72,6 @@ class NgSpiceWrapper(object):
         lines = copy.deepcopy(self.tmp_lines)
         for line_num, line in enumerate(lines):
             if line.startswith("parameters"):
-                # print(f"原始参数行: {line}")  # 打印原始参数行
                 for key, value in state.items():
                     regex = re.compile("(%s=\S+)" % key)  # 匹配 key=原值
                     found = regex.search(line)
@@ -80,12 +79,6 @@ class NgSpiceWrapper(object):
                         new_replacement = "%s=%s" % (key, str(value))
                         line = line.replace(found.group(0), new_replacement)  # 替换所有匹配的值
                 lines[line_num] = line  # 更新该行
-            # if 'wrdata' in line:
-            #     regex = re.compile("wrdata\s*(\w+\.\w+)\s*")  # 捕获文件名，要求文件名格式为"xxx.yyy"（使用（\w+\.\w+)捕获文件名)
-            #     found = regex.search(line)
-            #     if found:
-            #         replacement = os.path.join(design_folder, found.group(1))
-            #         lines[line_num] = lines[line_num].replace(found.group(1), replacement)
 
         with open(fpath, 'w') as f:
             f.writelines(lines)
@@ -94,7 +87,7 @@ class NgSpiceWrapper(object):
         # 读取 Ocean 脚本
         with open(NgSpiceWrapper.OCEAN_SCRIPT_PATH, "r") as f:
             tmp_lines = f.readlines()
-        regex = re.compile(r'(\?output\s*")([^"]+\.csv)(")')
+        regex = re.compile(r'(\?output\s*")([^"]+\.csv)(")')  # 不能删，否则ac/dc仿真会出现在当前工作目录下
         res_regex = re.compile(r'openResults\("([^"]+\.raw)"\)')
         for i, line in enumerate(tmp_lines):
             found = regex.search(line)
@@ -106,7 +99,6 @@ class NgSpiceWrapper(object):
 
             res_found = res_regex.search(line)
             if res_found:
-                old_path = res_found.group(1)  # 旧的 raw
                 new_path = os.path.join(design_folder, new_fname + '.raw')  # 生成新路径
                 new_line = line.replace(res_found.group(1), new_path)  # 替换行中的文件名
                 tmp_lines[i] = new_line
@@ -205,7 +197,7 @@ class NgSpiceWrapper(object):
         pool = ThreadPool(processes=self.num_process)  # 创建一个多线程池，进行多个仿真任务，self.num_process为线程数量
         arg_list = [(state, dsn_name, verbose) for (state, dsn_name) in zip(states, design_names)]
         specs = pool.starmap(self.create_design_and_simulate,
-                             arg_list)  # starmap自动展开arg_;ist，传递参数给create_design_and_simulate进行设计仿真
+                             arg_list)  # starmap自动展开arg_list，传递参数给create_design_and_simulate进行设计仿真
         pool.close()
         return specs
 
