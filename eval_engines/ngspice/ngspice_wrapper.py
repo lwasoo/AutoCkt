@@ -112,11 +112,10 @@ class NgSpiceWrapper(object):
 
         command = """
         source ~/junzhe/cshrc.gf55BCDlite_v1090
-        spectre "{0}" -o "{1}" =log output.log
+        spectre "{0}" -o "{1}" -log >& /dev/null
         ocean -nograph -restore "{2}" >& /dev/null
         find "{1}" -name ".*.dep" -exec rm -rf {{}} +
         find "{1}" -name "*.raw" -exec rm -rf {{}} +
-        rm -rf "{1}/output.log"
         """.format(fpath, output_dir, os.path.join(output_dir, "export.ocn"))
         try:
             subprocess.run(command, shell=True, executable="/bin/csh", check=True)
