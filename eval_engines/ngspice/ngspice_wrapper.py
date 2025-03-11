@@ -12,7 +12,6 @@ import time
 import pprint
 import yaml
 import IPython
-import subprocess
 
 debug = False
 
@@ -111,20 +110,18 @@ class NgSpiceWrapper(object):
             raise FileNotFoundError("Ocean script not found at expected path.")
 
         command = """
-        source ~/junzhe/cshrc.gf55BCDlite_v1090
         spectre "{0}" -o "{1}" -log >& /dev/null
         ocean -nograph -restore "{2}" >& /dev/null
         find "{1}" -name ".*.dep" -exec rm -rf {{}} +
         find "{1}" -name "*.raw" -exec rm -rf {{}} +
         """.format(fpath, output_dir, os.path.join(output_dir, "export.ocn"))
-        try:
-            subprocess.run(command, shell=True, executable="/bin/csh", check=True)
-        except subprocess.CalledProcessError as e:
-            print("Error occurred: {}".format(e))
-            info = 1  # 发生错误
+        exit_code = os.system(command)
         if debug:
             print(command)
             print(fpath)
+
+        if (exit_code % 256):
+            info = 1  # this means an error has occurred
 
         return info
 
