@@ -1,16 +1,25 @@
 此分支基于spectre仿真
-## Setup
-This setup requires Anaconda. In order to obtain the required packages, run the command below from the top level directory of the repo to install the Anaconda environment:
+## Notice
+To run the simulation, modify the simulation path in `wrapper.py` around line 114:
 
+```python
+source /path/to/csh/file/cshrc.gf55BCDlite_v1090  # Please update this to your own path
 ```
+Additionally, the default netlist file is located at:
+`eval_engines/ngspice/ngspice_inputs/netlist/2opamp`
+
+## Setup
+This setup requires Anaconda. In order to obtain the required packages, run the command below from the top level directory of the repo to install the `Anaconda` environment:
+
+```bash
 conda env create -f environment.yml
 ```
 
 To activate the environment run:
-```
+```bash
 source activate autockt
 ```
-You might need to install some packages further using pip if necessary. To ensure the right versions, look at the environment.yml file.
+You might need to install some packages further using pip if necessary. To ensure the right versions, look at the `environment.yml` file.
 
 ## Code Setup
 The code is setup as follows:
@@ -32,36 +41,36 @@ The top level directory contains two sub-directories:
 Make sure that you are in the Anaconda environment. Before running training, the circuit netlist must be modified in order to point to the right library files in your directory. To do this, run the following command:
 
 To generate the design specifications that the agent trains on, run:
-```
+```bash
 python autockt/gen_specs.py --num_specs ##
 ```
 The result is a pickle file dumped to the gen_specs/ folder.
 
-To train the agent, open ipython from the top level directory and then: 
-```
+To train the agent, open `ipython` from the top level directory and then: 
+```bash
 run autockt/val_autobag_ray.py
 ```
 The training checkpoints will be saved in your home directory under ray\_results. Tensorboard can be used to load reward and loss plots using the command:
 
-```
+```bash
 tensorboard --logdir path/to/checkpoint
 ```
 
 To replicate the results from the paper, num_specs 350 was used (only 50 were selected for each CPU worker). Ray parallelizes according to number of CPUs available, that affects training time. 
 ## Validating AutoCkt
-The rollout script takes the trained agent and gives it new specs that the agent has never seen before. To generate new design specs, run the gen_specs.py file again with your desired number of specs to validate on. To run validation, open ipython:
+The rollout script takes the trained agent and gives it new specs that the agent has never seen before. To generate new design specs, run the `gen_specs.py` file again with your desired number of specs to validate on. To run validation, open `ipython`:
 
-```
+```bash
 run autockt/rollout.py /path/to/ray/checkpoint --run PPO --env opamp-v0 --num_val_specs ### --traj_len ## --no-render
 ``` 
 * num_val_specs: the number of untrained objectives to test on
 * traj_len: the length of each trajectory
 
-Two pickle files will be updated: opamp_obs_reached_test and opamp_obs_nreached_test. These will contain all the reached and unreached specs, respectively.
+Two pickle files will be updated: `opamp_obs_reached_test` and `opamp_obs_nreached_test`. These will contain all the reached and unreached specs, respectively.
 
 ## Results
 Please note that results vary greatly based on random seed and spec generation (both for testing and validation). An example spec file is provided that was used to generate the results below. 
 
 <img src=readme_images/results.png width="800">
 
-The rollout generalization results will show up as pickle files opamp_obs_reached_test and opamp_obs_nreached_test. For this particular run, we obtained 938/1000. Additional runs were also conducted, and we found that the results varied from 80%-96% depending on the generated specs during rollout, and the specs that were changed during training. Our results were obtained by running on an 8 core machine, we've found that running on anything below 2 cores results in weird training behavior. 
+The rollout generalization results will show up as pickle files `opamp_obs_reached_test` and `opamp_obs_nreached_test`. For this particular run, we obtained 938/1000. Additional runs were also conducted, and we found that the results varied from 80%-96% depending on the generated specs during rollout, and the specs that were changed during training. Our results were obtained by running on an 8 core machine, we've found that running on anything below 2 cores results in weird training behavior. 
