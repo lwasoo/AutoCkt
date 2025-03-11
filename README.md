@@ -1,15 +1,32 @@
 此分支基于spectre仿真
 ## Notice
-To run the simulation, modify the simulation path in `wrapper.py` around line 114:
+This code requires Anaconda / miniconda. 
 
-```python
-source /path/to/csh/file/cshrc.gf55BCDlite_v1090  # Please update this to your own path
+After installing Conda, you need to set up the environment.  
+By default, `conda init` sets up Conda for `bash`, but you can configure it for `csh` by adding the following lines to your `csh` configuration file:
+```bash
+#add these to the csh file, which means your 'cshrc.gf55BCDlite_v1090' file
+# Conda setup
+setenv PATH "${HOME}/anaconda3/bin:${PATH}" # set all these path to you conda installation path
+if ( -f "${HOME}/anaconda3/etc/profile.d/conda.csh" ) then
+    source "${HOME}/anaconda3/etc/profile.d/conda.csh"
+else
+    echo "No Conda csh file found in the specified path."
+endif
 ```
+To start conda environment, first run:
+
+```bash
+conda activate
+```
+which will start the conda base, then follow the setup instruction.
+
 Additionally, the default netlist file is located at:
 `eval_engines/ngspice/ngspice_inputs/netlist/2opamp`
 
 ## Setup
-This setup requires Anaconda. In order to obtain the required packages, run the command below from the top level directory of the repo to install the `Anaconda` environment:
+
+In order to obtain the required packages, run the command below from the top level directory of the repo to install the `Anaconda` environment:
 
 ```bash
 conda env create -f environment.yml
