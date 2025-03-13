@@ -12,6 +12,8 @@ import time
 import pprint
 import yaml
 import IPython
+import shutil
+import fasteners
 
 debug = False
 
@@ -34,6 +36,9 @@ class NgSpiceWrapper(object):
         self.base_design_name = os.path.splitext(dsg_netlist_fname)[0]
         self.num_process = num_process
         self.gen_dir = os.path.join(self.root_dir, "designs_" + self.base_design_name)
+        self.simulation_count = 0  # 记录仿真次数
+        self.cleanup_interval = 1000
+        self.cleanup_lock = fasteners.InterProcessLock(os.path.join(self.gen_dir, "cleanup.lock"))  # 初始化锁文件
 
         # 创建目录，如果已存在不会抛出异常
         os.makedirs(self.root_dir, exist_ok=True)
@@ -119,7 +124,39 @@ class NgSpiceWrapper(object):
         design_folder, fpath = self.create_design(state, dsn_name)
         info = self.simulate(fpath)
         specs = self.translate_result(design_folder)
+
+        self.simulation_count += 1
+        if self.simulation_count % self.cleanup_interval == 0:
+            self.clean_old_simulations(keep_latest=100)
+
         return state, specs, info
+
+    def clean_old_simulations(self, keep_latest=100):
+        """
+        删除较旧的仿真文件，只保留最近 keep_latest 次仿真结果。
+        """
+        # 增加进程锁
+        with self.cleanup_lock:
+            # 获取所有仿真生成的子目录
+            design_folders = [
+                d.path
+                for d in os.scandir(self.gen_dir)
+                if os.path.isdir(d.path)
+            ]
+            # 按创建时间排序（旧的在前，新的在后）
+            # 缓存创建时间，减少重复调用 os.path.getctime
+            design_folders = sorted(
+                design_folders,
+                key=lambda x: os.path.getctime(x)
+            )
+
+            if len(design_folders) > keep_latest:
+                folders_to_delete = design_folders[:-keep_latest]  # 取出旧的部分
+                for folder in folders_to_delete:
+                    try:
+                        shutil.rmtree(folder)  # 删除整个文件夹及其中所有内容
+                    except Exception as e:
+                        log.error("Error deleting folder {}: {}".format(folder, e))
 
     def run(self, states, design_names=None, verbose=False):
         """
