@@ -136,7 +136,9 @@ class NgSpiceWrapper(object):
         删除较旧的仿真文件，只保留最近 keep_latest 次仿真结果。
         """
         # 增加进程锁
-        with self.cleanup_lock:
+        if not self.cleanup_lock.acquire(blocking=False):
+            return
+        try:
             # 获取所有仿真生成的子目录
             design_folders = [
                 d.path
@@ -157,6 +159,8 @@ class NgSpiceWrapper(object):
                         shutil.rmtree(folder)  # 删除整个文件夹及其中所有内容
                     except Exception as e:
                         log.error("Error deleting folder {}: {}".format(folder, e))
+        finally:
+            self.cleanup_lock.release()
 
     def run(self, states, design_names=None, verbose=False):
         """
