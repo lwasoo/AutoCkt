@@ -91,3 +91,8 @@ Please note that results vary greatly based on random seed and spec generation (
 <img src=readme_images/results.png width="800">
 
 The rollout generalization results will show up as pickle files `opamp_obs_reached_test` and `opamp_obs_nreached_test`. For this particular run, we obtained 938/1000. Additional runs were also conducted, and we found that the results varied from 80%-96% depending on the generated specs during rollout, and the specs that were changed during training. Our results were obtained by running on an 8 core machine, we've found that running on anything below 2 cores results in weird training behavior. 
+
+## Cascode modify
+Modifying requires editors to edit paramters at line 121 in ngspice_vanilla_opamp.py(self.cur_params_idx = np.array([33, 33, 33, 33, 33, 14, 20])),editors are required to modify the initialized paramters due to your own requirements.
+Secondly, editors need to edit env.step([2, 2, 2, 2, 2, 2, 2]) because you need to set the initialized steps for the agent. Basically, the numbers should be set 2 as positive steps. The number of paramters is set due to your own requirements.
+Thirdly, editors have to edit yaml file. In this project, two_stage_opamp.yaml should be modified. Editors have to set your own paramters and modify the target_spec as you expect.
