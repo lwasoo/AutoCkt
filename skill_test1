@@ -1,0 +1,11 @@
+simulator('spectre)
+targetDir = "/student/fyp/j2278fyp25/Skill1/123.txt"
+design("temporary_lib" "cascode_tb" "schematic")
+analysis('dc ?saveOppoint t)
+analysis('ac ?start "1" ?stop "10G" )
+;custom change value
+desVar("mn3" 33 "mn4" 33 "mn5" 33 "mp1" 33 "mp2" 33)
+filename = createNetlist(?display t)
+outfile = outfile(targetDir "w")
+fprintf(outfile filename)
+close(outfile)               
