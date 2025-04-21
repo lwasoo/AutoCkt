@@ -26,7 +26,7 @@ Additionally, the default netlist file is located at:
 
 ## Setup
 
-In order to obtain the required packages, run the command below from the top level directory of the repo to install the `Anaconda` environment:
+In order to obtain the required packages, run the command below from the top level directory of the repo to install the `Anaconda` environment (only need to create environment once):
 
 ```bash
 conda env create -f environment.yml
@@ -34,7 +34,7 @@ conda env create -f environment.yml
 
 To activate the environment run:
 ```bash
-source activate autockt
+conda activate autockt
 ```
 You might need to install some packages further using pip if necessary. To ensure the right versions, look at the `environment.yml` file.
 
