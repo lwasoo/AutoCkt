@@ -92,7 +92,51 @@ Please note that results vary greatly based on random seed and spec generation (
 
 The rollout generalization results will show up as pickle files `opamp_obs_reached_test` and `opamp_obs_nreached_test`. For this particular run, we obtained 938/1000. Additional runs were also conducted, and we found that the results varied from 80%-96% depending on the generated specs during rollout, and the specs that were changed during training. Our results were obtained by running on an 8 core machine, we've found that running on anything below 2 cores results in weird training behavior. 
 
-## Cascode modify
-Modifying requires editors to edit paramters at line 121 in ngspice_vanilla_opamp.py(self.cur_params_idx = np.array([33, 33, 33, 33, 33, 14, 20])),editors are required to modify the initialized paramters due to your own requirements.
-Secondly, editors need to edit env.step([2, 2, 2, 2, 2, 2, 2]) because you need to set the initialized steps for the agent. Basically, the numbers should be set 2 as positive steps. The number of paramters is set due to your own requirements.
-Thirdly, editors have to edit yaml file. In this project, two_stage_opamp.yaml should be modified. Editors have to set your own paramters and modify the target_spec as you expect.
+---
+
+## 🔧 Parameters Modification Guide
+
+To customize the cascode or classAB amplifier design in this project, please follow the steps below:
+
+### 1. **Update Initial Parameters**
+
+In the file `ngspice_vanilla_opamp.py`, locate **line 121**:
+
+```python
+self.cur_params_idx = np.array([33, 33, 33, 33, 33, 14, 20])
+```
+
+Replace these values with your own parameter indices to set the **initial transistor sizing**. The number of values should match the number of parameters you intend to tune.
+
+---
+
+### 2. **Set Agent Initialization Steps**
+
+Still in `ngspice_vanilla_opamp.py`, find the line:
+
+```python
+env.step([2, 2, 2, 2, 2, 2, 2])
+```
+
+Update the list to set the **initial actions for the reinforcement learning agent**. Generally, values of `2` indicate a small positive step size. Make sure the number of steps matches the number of parameters you defined in step 1.
+
+---
+
+### 3. **Edit the YAML Configuration**
+
+Open the configuration file `two_stage_opamp.yaml`. In this file:
+
+- Define your own parameter bounds under the `params` section.
+- Update the `target_spec` section to reflect your **desired circuit specifications**, such as gain, bandwidth, phase margin, power, etc.
+
+---
+
+### ✅ Summary
+
+| File                        | What to Modify                            | Why?                          |
+|-----------------------------|--------------------------------------------|-------------------------------|
+| `ngspice_vanilla_opamp.py` | `cur_params_idx` at line 121              | Sets initial parameter values |
+| `ngspice_vanilla_opamp.py` | `env.step([...])`                         | Sets agent's starting steps   |
+| `two_stage_opamp.yaml`     | `params` and `target_spec` fields         | Customizes design goals       |
+
+---
