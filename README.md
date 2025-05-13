@@ -6,6 +6,7 @@ After installing Conda, you need to set up the environment.
 By default, `conda init` sets up Conda for `bash`, but you can configure it for `csh` by adding the following lines to your `csh` configuration file:
 ```bash
 #add these to the csh file, which means your 'cshrc.gf55BCDlite_v1090' file
+setenv SPECTRE_MODEL_PATH /net/vlsiserver/usr11/library/CSM/gf55BCDlite_v1090_stack7A/55BCDlite/V1.0_9.0/Models/Spectre/55bcdlite/models/
 # Conda setup
 setenv PATH "${HOME}/anaconda3/bin:${PATH}" # set all these path to you conda installation path
 if ( -f "${HOME}/anaconda3/etc/profile.d/conda.csh" ) then
