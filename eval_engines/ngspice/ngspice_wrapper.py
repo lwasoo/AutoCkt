@@ -86,14 +86,13 @@ class NgSpiceWrapper(object):
         # 读取 Ocean 脚本
         with open(NgSpiceWrapper.OCEAN_SCRIPT_PATH, "r") as f:
             tmp_lines = f.readlines()
-        regex = re.compile(r'(\?output\s*")([^"]+\.csv)(")')  # 不能删，否则ac/dc仿真会出现在当前工作目录下
+        regex = re.compile(r'outfile\("([^"]+\.txt)"')  # 匹配 results.txt
         res_regex = re.compile(r'openResults\("([^"]+\.raw)"\)')
         for i, line in enumerate(tmp_lines):
             found = regex.search(line)
             if found:
-                old_path = found.group(2)  # 旧的 CSV 文件名（如 ac.csv / dc.csv）
-                new_path = os.path.join(design_folder, old_path)  # 生成新路径
-                new_line = line.replace(found.group(2), new_path)  # 替换行中的文件名
+                new_path = os.path.join(design_folder, "results.txt")  # 生成新路径
+                new_line = line.replace(found.group(1), new_path)  # 替换文件名
                 tmp_lines[i] = new_line
 
             res_found = res_regex.search(line)
