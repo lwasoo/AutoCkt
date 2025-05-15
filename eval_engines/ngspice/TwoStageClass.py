@@ -17,17 +17,35 @@ class TwoStageClass(NgSpiceWrapper):
 
     def translate_result(self, output_path):
         """
-
         :param output_path:
         :return
             result: dict(spec_kwds, spec_value)
         """
 
-        # use parse output here
-        freq, vout, ibias = self.parse_output(output_path)
-        gain = self.find_dc_gain(vout)
-        ugbw = self.find_ugbw(freq, vout)
-        phm = self.find_phm(freq, vout)
+        result_file = os.path.join(output_path, 'results.txt')
+    
+        if not os.path.isfile(result_file):
+            log.warning("results file doesn't exist: {}".format(output_path))
+            return None
+            
+        with open(result_file, 'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                if line.strip():  # 跳过空行
+                    try:
+                        key, value = line.split(':')
+                        key = key.strip()
+                        value = float(value.strip())
+                        if key == 'VoltageGain':
+                            gain = value
+                        elif key == 'ugbw':
+                            ugbw = value
+                        elif key == 'phm':
+                            phm = value
+                        elif key == 'ibias':
+                            ibias = value * -1
+                    except:
+                        continue
 
         spec = dict(
             ugbw=ugbw,
@@ -38,79 +56,8 @@ class TwoStageClass(NgSpiceWrapper):
 
         return spec
 
-    def parse_output(self, output_path):
 
-        ac_fname = os.path.join(output_path, 'ac.csv')
-        dc_fname = os.path.join(output_path, 'dc.csv')
-
-        if not os.path.isfile(ac_fname) or not os.path.isfile(dc_fname):
-            log.warning("ac/dc file doesn't exist: {}".format(output_path))
-
-        ac_raw_outputs = np.genfromtxt(ac_fname, skip_header=1, delimiter=None, usecols=(0,1))
-        dc_raw_outputs = np.genfromtxt(dc_fname, skip_header=1)
-        freq = ac_raw_outputs[:, 0]
-        vout = ac_raw_outputs[:, 1]
-        # 在读取数据后，清理 freq 和 vout
-        valid_indices = ~np.isnan(freq) & ~np.isnan(vout)  # 找到有效的索引
-        freq = freq[valid_indices]  # 过滤有效的频率
-        vout = vout[valid_indices]  # 过滤有效的输出
-
-        # # 继续使用 freq_clean 和 vout_clean 进行后续处理
-        # print("清理后的 freq: ", freq)
-        # print("清理后的 vout: ", vout)
-
-        ibias = -dc_raw_outputs
-
-        return freq, vout, ibias
-
-    def find_dc_gain(self, vout):
-        # return np.abs(vout)[0]
-        return vout[0]
-
-    def find_ugbw(self, freq, vout):
-        ugbw, valid = self._compute_ugbw(freq, vout)
-        if valid:
-            return ugbw
-        else:
-            return freq[0]
-
-    def find_phm(self, freq, vout):
-        ugbw, valid = self._compute_ugbw(freq, vout)
-        phase = np.angle(vout, deg=False)
-        phase = np.unwrap(phase)  # unwrap the discontinuity
-        phase = np.rad2deg(phase)  # convert to degrees
-        #
-        # plt.subplot(211)
-        # plt.plot(np.log10(freq[:200]), 20*np.log10(gain[:200]))
-        # plt.subplot(212)
-        # plt.plot(np.log10(freq[:200]), phase)
-
-        phase_fun = interp.interp1d(freq, phase, kind='quadratic')
-        if valid:
-            if phase_fun(ugbw) > 0:
-                return -180 + phase_fun(ugbw)
-            else:
-                return 180 + phase_fun(ugbw)
-        else:
-            return -180
-
-    def _compute_ugbw(self, freq, vout):
-        # gain = np.abs(vout)
-        return self._get_best_crossing(freq, vout, val=1)
-
-    def _get_best_crossing(cls, xvec, yvec, val):
-        interp_fun = interp.InterpolatedUnivariateSpline(xvec, yvec)
-
-        def fzero(x):
-            return interp_fun(x) - val
-
-        xstart, xstop = xvec[0], xvec[-1]
-        try:
-            return sciopt.brentq(fzero, xstart, xstop), True
-        except ValueError:
-            return xstop, False
-
-
+#原作者遗留，目前为止没用过
 class TwoStageMeasManager(object):
 
     def __init__(self, design_specs_fname):

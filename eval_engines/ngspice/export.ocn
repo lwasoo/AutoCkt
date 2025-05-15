@@ -1,6 +1,25 @@
 openResults("2opamp.raw")
+
 selectResult("ac")
-ocnPrint(?output "ac.csv" v("VOUT") ?numberNotation "scientific")
+gainTF = v("VOUT") / v("Vp")
+
+VoltageGain = ymax(mag(gainTF))
+;VoltageGain = ymax(dB20(gainTF))
+;Bandwidth = bandwidth(gainTF 3 "low")
+
+UGBW = cross(mag(gainTF) 1.0)
+PM = phaseMargin(gainTF)
+
 selectResult("dcOp")
-ocnPrint(?output "dc.csv" i("V1:p") ?numberNotation "scientific")
+Ibias = i("V1:p")
+
+
+filePtr = outfile("results.txt")
+
+ocnPrint( ?output filePtr ?numberNotation 'scientific ?numSpaces 1 "VoltageGain:" VoltageGain )
+;ocnPrint( ?output filePtr ?numberNotation 'scientific ?numSpaces 1 "Bandwidth:" Bandwidth )
+ocnPrint( ?output filePtr ?numberNotation 'scientific ?numSpaces 1 "ugbw:" UGBW )
+ocnPrint( ?output filePtr ?numberNotation 'scientific ?numSpaces 1 "phm:" PM )
+ocnPrint( ?output filePtr ?numberNotation 'scientific ?numSpaces 1 "ibias:" Ibias )
+
 exit()
