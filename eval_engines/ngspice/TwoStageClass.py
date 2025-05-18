@@ -27,35 +27,42 @@ class TwoStageClass(NgSpiceWrapper):
         if not os.path.isfile(result_file):
             log.warning("results file doesn't exist: {}".format(output_path))
             return None
-            
+
+        key_map = {
+            'VoltageGain': 'gain',
+            'ugbw': 'ugbw',
+            'phm': 'phm',
+            'ibias': 'ibias'
+        }
+
+        results = {}
+
         with open(result_file, 'r') as f:
-            lines = f.readlines()
-            for line in lines:
-                if line.strip():  # 跳过空行
-                    try:
-                        key, value = line.split(':')
-                        key = key.strip()
-                        value = float(value.strip())
-                        if key == 'VoltageGain':
-                            gain = value
-                        elif key == 'ugbw':
-                            ugbw = value
-                        elif key == 'phm':
-                            phm = value
-                        elif key == 'ibias':
-                            ibias = value * -1
-                    except:
-                        continue
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    key, value = line.split(':')
+                    key = key.strip()
+                    value = float(value.strip())
+                    mapped_key = key_map.get(key)
+                    if mapped_key:
+                        results[mapped_key] = -value if mapped_key == 'ibias' else value
+                except Exception as e:
+                    log.warning("[translate_result] Skipping line due to error: {} ({})".format(line, e))
+                    continue
 
-        spec = dict(
-            ugbw=ugbw,
-            gain=gain,
-            phm=phm,
-            ibias=ibias
+        missing = [k for k in ['ugbw', 'gain', 'phm', 'ibias'] if results.get(k) is None]
+        if missing:
+            log.warning("[translate_result] Missing spec(s) in {}: {}".format(output_path, ", ".join(missing)))
+
+        return dict(
+            ugbw=results.get('ugbw') if results.get('ugbw') is not None else 1e3,
+            gain=results.get('gain') if results.get('gain') is not None else 0.001,
+            phm=results.get('phm') if results.get('phm') is not None else 0.0,
+            ibias=results.get('ibias') if results.get('ibias') is not None else 1e-6
         )
-
-        return spec
-
 
 #原作者遗留，目前为止没用过
 class TwoStageMeasManager(object):

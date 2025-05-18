@@ -75,6 +75,7 @@ try:
                 "env": TwoStageAmp,
                 # "restore": trials[0]._checkpoint.value},
                 "restore": args.checkpoint_dir,
+                "stop": {"episode_reward_mean": -0.02},
                 "checkpoint_freq": 1},
         })
 
