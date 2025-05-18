@@ -1,5 +1,5 @@
 // Generated for: spectre
-// Generated on: Mar  7 19:22:27 2025
+// Generated on: May 13 11:56:44 2025
 // Design library name: temporary_lib
 // Design cell name: 2opamp_open_tb
 // Design view name: schematic
@@ -43,27 +43,28 @@ subckt temporary_lib_2opamp_schematic v\+ v\- vdd vout vss
         ps=10.42u m=mn3 nf=1 par=mn3 par_nf=(1) pccrit=0 ptwell=0 plnest=1 \
         plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 sca=0 scb=0 \
         scc=0 p_vta=0 pre_layout_local=-1
-    MN2 (net_24 v\+ net3 net3) dgxnfet l=1u w=10u ad=2.1p as=2.1p \
-        pd=20.42u ps=20.42u m=mn1 nf=1 par=mn1 par_nf=(1) pccrit=0 \
-        ptwell=0 plnest=1 plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n \
-        sd=0 sca=0 scb=0 scc=0 p_vta=0 pre_layout_local=-1
-    MN1 (net4 v\- net3 net3) dgxnfet l=1u w=10u ad=2.1p as=2.1p pd=20.42u \
+    MN2 (net_24 v\+ net3 VSS) dgxnfet l=1u w=10u ad=2.1p as=2.1p pd=20.42u \
         ps=20.42u m=mn1 nf=1 par=mn1 par_nf=(1) pccrit=0 ptwell=0 plnest=1 \
         plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 sca=0 scb=0 \
         scc=0 p_vta=0 pre_layout_local=-1
-    C0 (net_24 vout) capacitor c=cc
+    MN1 (net4 v\- net3 VSS) dgxnfet l=1u w=10u ad=2.1p as=2.1p pd=20.42u \
+        ps=20.42u m=mn1 nf=1 par=mn1 par_nf=(1) pccrit=0 ptwell=0 plnest=1 \
+        plorient=1 pld200=1 dtemp=0.0 sa=210n sb=210n sd=0 sca=0 scb=0 \
+        scc=0 p_vta=0 pre_layout_local=-1
+    C0 (net_24 net_028) capacitor c=cc
     ibias (vdd net7) isource dc=30u type=dc
+    R0 (net_028 vout) resistor r=1K
 ends temporary_lib_2opamp_schematic
 // End of subcircuit definition.
 
 // Library name: temporary_lib
 // Cell name: 2opamp_open_tb
 // View name: schematic
-I0 (V\+ V\- VDD VOUT VSS) temporary_lib_2opamp_schematic
+I0 (Vp Vn VDD VOUT VSS) temporary_lib_2opamp_schematic
+V4 (Vn 0) vsource dc=1.65 type=dc
 V1 (VDD 0) vsource dc=3.3 type=dc
 V0 (VSS 0) vsource dc=0 type=dc
-V3 (V\- 0) vsource dc=1.8 mag=1 phase=60 type=sine ampl=-500m freq=1K
-V2 (V\+ 0) vsource dc=1.8 mag=1 phase=0 type=sine ampl=500.0m freq=1K
+V5 (Vp Vn) vsource dc=0 mag=1 phase=0 type=sine ampl=500.0m freq=1K
 C0 (VOUT 0) capacitor c=10p
 simulatorOptions options psfversion="1.1.0" reltol=1e-3 vabstol=1e-6 \
     iabstol=1e-12 temp=27 tnom=27 scalem=1.0 scale=1.0 gmin=1e-12 rforce=1 \
@@ -79,5 +80,5 @@ outputParameter info what=output where=rawfile
 designParamVals info what=parameters where=rawfile
 primitives info what=primitives where=rawfile
 subckts info what=subckts where=rawfile
-save VOUT
+save VOUT Vp
 saveOptions options save=allpub

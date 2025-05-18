@@ -114,8 +114,8 @@ class NgSpiceWrapper(object):
             raise FileNotFoundError("Ocean script not found at expected path.")
 
         command = """
-        spectre "{0}" -o "{1}" -log >& /dev/null
-        ocean -nograph -restore "{2}" >& /dev/null
+        spectre "{0}" -o "{1}" -log >& "{1}/spectre.log"
+        ocean -nograph -restore "{2}" >& "{1}/ocean.log"
         find "{1}" -name ".*.dep" -exec rm -rf {{}} +
         find "{1}" -name "*.raw" -exec rm -rf {{}} +
         """.format(fpath, output_dir, os.path.join(output_dir, "export.ocn"))
