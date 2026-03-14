@@ -14,6 +14,7 @@ import yaml
 import IPython
 import shutil
 import fasteners
+import uuid
 
 debug = False
 
@@ -28,7 +29,7 @@ class NgSpiceWrapper(object):
             self.root_dir = root_dir
 
         with open(yaml_path, 'r') as f:
-            yaml_data = yaml.load(f)
+            yaml_data = yaml.load(f, Loader=yaml.Loader)
         design_netlist = yaml_data['dsn_netlist']
         design_netlist = path + '/' + design_netlist
 
@@ -44,9 +45,8 @@ class NgSpiceWrapper(object):
         os.makedirs(self.root_dir, exist_ok=True)
         os.makedirs(self.gen_dir, exist_ok=True)
 
-        raw_file = open(design_netlist, 'r')
-        self.tmp_lines = raw_file.readlines()
-        raw_file.close()
+        with open(design_netlist, 'r') as raw_file:
+            self.tmp_lines = raw_file.readlines()
 
     def get_design_name(self, state):
         fname = self.base_design_name
@@ -62,7 +62,7 @@ class NgSpiceWrapper(object):
          :return: 生成的电路设计文件所在的文件夹和路径
         """
 
-        design_folder = os.path.join(self.gen_dir, new_fname) + str(random.randint(0, 10000))
+        design_folder = os.path.join(self.gen_dir, "{}_{}".format(new_fname, uuid.uuid4().hex[:8]))
         os.makedirs(design_folder, exist_ok=True)
 
         fpath = os.path.join(design_folder, new_fname + '.cir')
@@ -70,7 +70,7 @@ class NgSpiceWrapper(object):
         lines = copy.deepcopy(self.tmp_lines)
         for line_num, line in enumerate(lines):
             if '.include' in line:
-                regex = re.compile("\.include\s*\"(.*?)\"")
+                regex = re.compile(r"\.include\s*\"(.*?)\"")
                 found = regex.search(line)
                 if found:
                     # current_fpath = os.path.realpath(__file__)
@@ -81,13 +81,13 @@ class NgSpiceWrapper(object):
                     pass  # do not change the model path
             if '.param' in line:
                 for key, value in state.items():
-                    regex = re.compile("%s=(\S+)" % (key))  # 遍历每一个字典，查找有无匹配的key=value的形式的param，若有，则需要用regex函数进行匹配并进行提取
+                    regex = re.compile(r"%s=(\S+)" % (key))  # 遍历每一个字典，查找有无匹配的key=value的形式的param，若有，则需要用regex函数进行匹配并进行提取
                     found = regex.search(line)
                     if found:
                         new_replacement = "%s=%s" % (key, str(value))
                         lines[line_num] = lines[line_num].replace(found.group(0), new_replacement)
             if 'wrdata' in line:
-                regex = re.compile("wrdata\s*(\w+\.\w+)\s*")  # 捕获文件名，要求文件名格式为"xxx.yyy"（使用（\w+\.\w+)捕获文件名)
+                regex = re.compile(r"wrdata\s*(\w+\.\w+)\s*")  # 捕获文件名，要求文件名格式为"xxx.yyy"（使用（\w+\.\w+)捕获文件名)
                 found = regex.search(line)
                 if found:
                     replacement = os.path.join(design_folder, found.group(1))
@@ -95,7 +95,6 @@ class NgSpiceWrapper(object):
 
         with open(fpath, 'w') as f:
             f.writelines(lines)
-            f.close()
         return design_folder, fpath
 
     def simulate(self, fpath):
@@ -171,6 +170,9 @@ class NgSpiceWrapper(object):
         :return:
             results = [(state: dict(param_kwds, param_value), specs: dict(spec_kwds, spec_value), info: int)]
         """
+        if design_names is None:
+            design_names = [None] * len(states)
+
         pool = ThreadPool(processes=self.num_process)  # 创建一个多线程池，进行多个仿真任务，self.num_process为线程数量
         arg_list = [(state, dsn_name, verbose) for (state, dsn_name) in zip(states, design_names)]
         specs = pool.starmap(self.create_design_and_simulate,
