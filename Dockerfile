@@ -1,89 +1,117 @@
-# 构建镜像指令：docker build -t autockt .
-# 首次运行创建容器：docker run -it -p 6006:6006 --name autockt-container autockt:latest
-# (创建容器并挂载到本地目录：docker run -it -p 8080:8080 -v <本地路径>(如 C:\Users\ASUS\Documents\project):<容器路径>(/app) --name autockt-container-mount autockt:latest)
-# 再次进入或容器未开启 先启动容器：docker start autockt-container
-# 再次进入容器：docker exec -it autockt-container /bin/bash
-# 退出容器：exit
-# 删除容器：docker rm -f autockt-container
-# 删除镜像：docker rmi -f autockt
+# Build:
+#   docker build -t autockt:py310-centos7 .
+# Run:
+#   docker run -it --name autockt-py310 -p 6006:6006 autockt:py310-centos7
+# TensorBoard inside container:
+#   tensorboard --logdir /root/ray_results --host=0.0.0.0 --port=6006
 
-# M芯片目前不可用
-# M芯片：docker build --platform linux/amd64 -t autockt .
-# M芯片运行镜像：docker run --platform linux/amd64 -it --name autockt-container autockt:latest
-
-# （MARK: 长命令反斜杠后面不要加注释，docker会解析错误）
-
-# tensorboard --logdir /root/ray_results/train_45nm_ngspice/ --host=0.0.0.0 --port=6006
-# 外部启用：http://localhost:6006
-
-# 使用 CentOS 7 基础镜像，并安装 Miniconda
 FROM centos:7
 
-# 安装基础工具和依赖 + 换阿里云镜像源（centos7官方不维护）
-# 如果无法解析，添加到deamon.json "dns": [ "8.8.8.8", "8.8.4.4"]
-
-# --------------- 第一步：替换 CentOS 7 软件源为阿里云镜像 ---------------
-RUN mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.backup \
-    && curl -o /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo \
-    && sed -i 's/mirror.centos.org/mirrors.aliyun.com/g' /etc/yum.repos.d/CentOS-Base.repo \
+# CentOS7 mirror fix (pin to TUNA centos-vault for better stability in CN networks)
+RUN printf '%s\n' \
+'[base]' \
+'name=CentOS-7.9.2009 - Base' \
+'baseurl=https://mirrors.tuna.tsinghua.edu.cn/centos-vault/7.9.2009/os/$basearch/' \
+'gpgcheck=1' \
+'enabled=1' \
+'gpgkey=https://mirrors.tuna.tsinghua.edu.cn/centos-vault/7.9.2009/os/$basearch/RPM-GPG-KEY-CentOS-7' \
+'' \
+'[updates]' \
+'name=CentOS-7.9.2009 - Updates' \
+'baseurl=https://mirrors.tuna.tsinghua.edu.cn/centos-vault/7.9.2009/updates/$basearch/' \
+'gpgcheck=1' \
+'enabled=1' \
+'gpgkey=https://mirrors.tuna.tsinghua.edu.cn/centos-vault/7.9.2009/os/$basearch/RPM-GPG-KEY-CentOS-7' \
+'' \
+'[extras]' \
+'name=CentOS-7.9.2009 - Extras' \
+'baseurl=https://mirrors.tuna.tsinghua.edu.cn/centos-vault/7.9.2009/extras/$basearch/' \
+'gpgcheck=1' \
+'enabled=1' \
+'gpgkey=https://mirrors.tuna.tsinghua.edu.cn/centos-vault/7.9.2009/os/$basearch/RPM-GPG-KEY-CentOS-7' \
+> /etc/yum.repos.d/CentOS-Base.repo \
+    && rpm --import https://mirrors.tuna.tsinghua.edu.cn/centos-vault/7.9.2009/os/x86_64/RPM-GPG-KEY-CentOS-7 \
+    && echo "retries=10" >> /etc/yum.conf \
+    && echo "timeout=120" >> /etc/yum.conf \
+    && echo "minrate=1" >> /etc/yum.conf \
     && yum clean all \
     && yum makecache
 
-# --------------- 第二步：安装系统依赖 ---------------
-RUN yum install -y \
+# Base build dependencies
+RUN yum install -y --setopt=timeout=120 --setopt=retries=10 \
     wget \
+    tar \
+    make \
     gcc \
     gcc-c++ \
-    make \
-    libtool \
-    automake \
-    mesa-libGL \
-    libXext \
-    libXrender \
-    libSM \
+    perl \
+    zlib-devel \
+    bzip2-devel \
+    xz-devel \
+    libffi-devel \
     readline-devel \
-    libX11-devel \
+    sqlite-devel \
+    ncurses-devel \
+    ca-certificates \
     && yum clean all
 
-# 安装 Miniconda（手动指定 Python 3.5 版本）
-ENV CONDA_DIR=/opt/conda
-RUN wget https://repo.anaconda.com/miniconda/Miniconda3-4.7.12-Linux-x86_64.sh -O miniconda.sh \
-    && bash miniconda.sh -b -p $CONDA_DIR \
-    && rm miniconda.sh
-ENV PATH=$CONDA_DIR/bin:$PATH
+# Build OpenSSL 1.1.1 (Python 3.10 requires newer OpenSSL than CentOS7 default)
+ENV OPENSSL_VERSION=1.1.1w
+RUN cd /tmp \
+    && wget https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz \
+    && tar -xzf openssl-${OPENSSL_VERSION}.tar.gz \
+    && cd openssl-${OPENSSL_VERSION} \
+    && ./config --prefix=/opt/openssl --openssldir=/opt/openssl shared zlib \
+    && make -j"$(nproc)" \
+    && make install_sw \
+    && rm -rf /tmp/openssl-${OPENSSL_VERSION}*
 
-# 安装 NGSPICE 2.7（根据 CentOS 依赖调整）
-# --enable-xspice \    # 启用 XSPICE 扩展 
-# --disable-debug \    # 禁用调试模式（减少体积）
-# --without-x \        # 禁用图形界面（纯命令行）
-RUN wget https://sourceforge.net/projects/ngspice/files/ng-spice-rework/old-releases/27/ngspice-27.tar.gz \
+# Build Python 3.10 from source
+ENV PYTHON_VERSION=3.10.14
+RUN cd /tmp \
+    && wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz \
+    && tar -xzf Python-${PYTHON_VERSION}.tgz \
+    && cd Python-${PYTHON_VERSION} \
+    && LD_RUN_PATH=/opt/openssl/lib ./configure \
+        --prefix=/opt/python/${PYTHON_VERSION} \
+        --with-openssl=/opt/openssl \
+        --with-openssl-rpath=auto \
+    && make -j"$(nproc)" \
+    && make install \
+    && rm -rf /tmp/Python-${PYTHON_VERSION}*
+
+ENV PATH=/opt/python/${PYTHON_VERSION}/bin:$PATH
+ENV LD_LIBRARY_PATH=/opt/openssl/lib:$LD_LIBRARY_PATH
+
+# Install NGSPICE 2.7
+RUN cd /tmp \
+    && wget https://sourceforge.net/projects/ngspice/files/ng-spice-rework/old-releases/27/ngspice-27.tar.gz \
     && tar -xzf ngspice-27.tar.gz \
     && cd ngspice-27 \
-    && ./configure --prefix=/usr/local \
-        --enable-xspice \
-        --disable-debug \
-        --without-x \
-    && make -j$(nproc) \
+    && ./configure --prefix=/usr/local --enable-xspice --disable-debug --without-x \
+    && make -j"$(nproc)" \
     && make install \
-    && cd .. \
+    && cd /tmp \
     && rm -rf ngspice-27*
 
-# 复制 当前（AutoCkt） 文件夹到容器中
+# Project
+WORKDIR /app/AutoCkt
 COPY . /app/AutoCkt
 
-# 创建 Conda 环境
-RUN conda env create -f /app/AutoCkt/environment.yml
+# venv + python deps
+RUN PYTHON_BIN=python3.10 VENV_DIR=/opt/venv INSTALL_TORCH_CPU=1 \
+    bash /app/AutoCkt/scripts/setup_venv.sh \
+    && /opt/venv/bin/pip check
+ENV PATH=/opt/venv/bin:$PATH
 
-# --------------- 激活环境并设置默认命令 ---------------
-# centos7 需要先初始化 conda
-RUN conda init bash
+# Optional runtime dir for ray outputs
+RUN mkdir -p /root/ray_results
+ENV RAY_DISABLE_DASHBOARD=1
+ENV PYTHONPATH=/app/AutoCkt
 
-# 激活环境并设置默认命令
-RUN echo "conda activate autockt" >> ~/.bashrc
-SHELL ["/bin/bash", "--login", "-c"]
+COPY scripts/docker_entrypoint.sh /usr/local/bin/docker_entrypoint.sh
+COPY scripts/cleanup_cktda.sh /usr/local/bin/cleanup_cktda.sh
+RUN chmod +x /usr/local/bin/docker_entrypoint.sh /usr/local/bin/cleanup_cktda.sh
 
-# 设置容器工作目录
-WORKDIR /app/AutoCkt
-
-# 设置容器默认命令
+ENTRYPOINT ["/usr/local/bin/docker_entrypoint.sh"]
 CMD ["/bin/bash"]

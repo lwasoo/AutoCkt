@@ -11,7 +11,6 @@ import random
 import time
 import pprint
 import yaml
-import IPython
 import shutil
 import fasteners
 import uuid
@@ -122,7 +121,13 @@ class NgSpiceWrapper(object):
             print(dsn_name)
         design_folder, fpath = self.create_design(state, dsn_name)
         info = self.simulate(fpath)
-        specs = self.translate_result(design_folder)
+        specs = None
+        try:
+            if info == 0:
+                specs = self.translate_result(design_folder)
+        except Exception as e:
+            info = 1
+            log.warning("translate_result failed for {}: {}".format(design_folder, e))
 
         self.simulation_count += 1
         if self.simulation_count % self.cleanup_interval == 0:

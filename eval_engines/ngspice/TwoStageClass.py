@@ -24,10 +24,14 @@ class TwoStageClass(NgSpiceWrapper):
         """
 
         # use parse output here
-        freq, vout, ibias = self.parse_output(output_path)
-        gain = self.find_dc_gain(vout)
-        ugbw = self.find_ugbw(freq, vout)
-        phm = self.find_phm(freq, vout)
+        try:
+            freq, vout, ibias = self.parse_output(output_path)
+            gain = self.find_dc_gain(vout)
+            ugbw = self.find_ugbw(freq, vout)
+            phm = self.find_phm(freq, vout)
+        except Exception as e:
+            log.warning("translate_result fallback for {}: {}".format(output_path, e))
+            return dict(ugbw=1e3, gain=1e-3, phm=0.0, ibias=1e-6)
 
         spec = dict(
             ugbw=ugbw,
@@ -44,7 +48,7 @@ class TwoStageClass(NgSpiceWrapper):
         dc_fname = os.path.join(output_path, 'dc.csv')
 
         if not os.path.isfile(ac_fname) or not os.path.isfile(dc_fname):
-            log.warning("ac/dc file doesn't exist: {}".format(output_path))
+            raise FileNotFoundError("ac/dc file doesn't exist: {}".format(output_path))
 
         ac_raw_outputs = np.genfromtxt(ac_fname, skip_header=1)
         dc_raw_outputs = np.genfromtxt(dc_fname, skip_header=1)

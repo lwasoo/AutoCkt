@@ -3,8 +3,12 @@ A new ckt environment based on a new structure of MDP
 """
 from Log import log
 
-import gym
-from gym import spaces
+try:
+    import gymnasium as gym
+    from gymnasium import spaces
+except ImportError:
+    import gym
+    from gym import spaces
 
 import numpy as np
 import random
@@ -21,7 +25,7 @@ class TwoStageAmp(gym.Env):
     metadata = {'render.modes': ['human']}
 
     PERF_LOW = -1
-    PERF_HIGH = 0
+    PERF_HIGH = 1
 
     PROJECT_ROOT = Path(__file__).resolve().parents[2]
     CIR_YAML = str(
@@ -37,6 +41,7 @@ class TwoStageAmp(gym.Env):
         self.done_reward = float(env_config.get("done_reward", 10.0))
         self.reward_tolerance = float(env_config.get("reward_tolerance", -0.02))
         self.sim_cache_size = int(env_config.get("sim_cache_size", 20000))
+        self.max_episode_steps = int(env_config.get("max_episode_steps", 200))
 
         self.env_steps = 0
         with open(TwoStageAmp.CIR_YAML, 'r') as f:
@@ -97,7 +102,13 @@ class TwoStageAmp(gym.Env):
 
         self.obj_idx = 0
 
-    def reset(self):
+    def reset(self, *, seed=None, options=None):
+        if hasattr(super(), "reset"):
+            try:
+                super().reset(seed=seed)
+            except TypeError:
+                pass
+        self.env_steps = 0
         if self.generalize or self.multi_goal:
             if self.generalize and self.valid:
                 if self.obj_idx > self.num_os - 1:
@@ -117,7 +128,7 @@ class TwoStageAmp(gym.Env):
         cur_spec_norm = self.lookup(self.cur_specs, self.global_g)
 
         self.ob = np.concatenate([cur_spec_norm, self.specs_ideal_norm, self.cur_params_idx]).astype(np.float32)
-        return self.ob
+        return self.ob, {}
 
     def step(self, action):
         """
@@ -136,9 +147,12 @@ class TwoStageAmp(gym.Env):
         self.cur_specs = self.update(self.cur_params_idx)
         cur_spec_norm = self.lookup(self.cur_specs, self.global_g)
         reward = self.reward(self.cur_specs, self.specs_ideal)
-        done = reward >= self.done_reward
+        if not np.isfinite(reward):
+            log.warning("Non-finite reward detected, fallback to -1.0")
+            reward = -1.0
+        terminated = reward >= self.done_reward
 
-        if done:
+        if terminated:
             log_details = (
                 "\n{0}\n"
                 "params = {1}\n"
@@ -151,12 +165,15 @@ class TwoStageAmp(gym.Env):
 
         self.ob = np.concatenate([cur_spec_norm, self.specs_ideal_norm, self.cur_params_idx]).astype(np.float32)
         self.env_steps += 1
+        truncated = self.env_steps >= self.max_episode_steps
 
-        return self.ob, reward, done, {}
+        return self.ob, reward, terminated, truncated, {}
 
     def lookup(self, spec, goal_spec):
         goal_spec = np.array([float(e) for e in goal_spec], dtype=np.float64)
         spec = np.array(spec, dtype=np.float64)
+        goal_spec = np.nan_to_num(goal_spec, nan=0.0, posinf=1e6, neginf=-1e6)
+        spec = np.nan_to_num(spec, nan=0.0, posinf=1e6, neginf=-1e6)
         den = goal_spec + spec
         den = np.where(np.abs(den) < 1e-12, 1e-12, den)
         norm_spec = (spec - goal_spec) / den
@@ -194,6 +211,9 @@ class TwoStageAmp(gym.Env):
         else:
             cur_specs = OrderedDict(sorted(specs_dict.items(), key=lambda k: k[0]))
             cur_specs = np.array(list(cur_specs.values()), dtype=np.float64)
+            if not np.all(np.isfinite(cur_specs)):
+                log.warning("Non-finite specs detected, fallback to zeros: %s", cur_specs)
+                cur_specs = np.zeros(len(self.specs_id), dtype=np.float64)
 
         self.sim_cache[cache_key] = cur_specs
         if len(self.sim_cache) > self.sim_cache_size:

@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+
+# IDE/editor
+.idea/
+.vscode/
+
+# Runtime artifacts
+/tmp/
+/root/ray_results/
+*.log
+
+# Project-generated outputs
+opamp_obs_reached_test
+opamp_obs_nreached_test
+bsim4v5.out
+
