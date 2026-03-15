@@ -3,6 +3,15 @@ UPDATE: please see the journal paper for additional results on designing a two-s
 # AutoCkt: Deep Reinforcement Learning of Analog Circuit Designs
 Code for [Deep Reinforcement Learning of Analog Circuit Designs](https://arxiv.org/abs/2001.01808), presented at Design Automation and Test in Europe, 2020. Note that the results shown in the paper include those from NGSpice and Spectre. NGSpice is free and can be installed online (see Setup). Spectre requires a license, as well as access to the particular technology; the code for this will be open sourced at a later time.
 
+## Runtime Upgrade
+This branch has been upgraded to:
+- Python 3.10
+- Ray RLlib 2.x (`ray[rllib]==2.9.3`)
+- Gymnasium (`gymnasium==0.28.1`)
+- venv-based setup (Conda `environment.yml` removed)
+
+Use `requirements-py310.txt` as the single Python dependency source for both Docker and native Linux setup.
+
 ## Setup
 ### Option A: Docker (recommended)
 Build and run:
@@ -65,7 +74,8 @@ The result is a pickle file dumped to the gen_specs/ folder.
 
 To train the agent (recommended module launch):
 ```bash
-PYTHONPATH=/app/AutoCkt python -m autockt.val_autobag_ray --num_workers 4 --checkpoint_freq 5 --keep_checkpoints_num 5
+export PYTHONPATH=$(pwd)
+python -m autockt.val_autobag_ray --num_workers 4 --checkpoint_freq 1 --keep_checkpoints_num 0
 ```
 The training checkpoints will be saved in your home directory under ray\_results. Tensorboard can be used to load reward and loss plots using the command:
 
